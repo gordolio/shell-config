@@ -1,0 +1,98 @@
+export CLICOLOR=1
+export LSCOLORS=ExFxCxDxBxegedabagacad
+export UNAME="$(uname -o)"
+
+LS_COMMON="-h --color=auto"
+
+if [[ $UNAME == "Cygwin" ]]
+then
+  export PATH=$PATH
+  VIM_ARGS="-u $HOME/.vimrc"
+  VIM_ARGS="$VIM_ARGS -U $HOME/.gvimrc"
+  RTP=`cygpath -w $HOME/.vim`
+  VIM_ARGS="$VIM_ARGS --cmd \"set rtp^=${(q)RTP}\""
+  VIM_ARGS="$VIM_ARGS -f"
+
+  export EDITOR="$HOME/bin/win.sh /cygdrive/c/ProgFilesX86/Vim/vim74/gvim.exe $VIM_ARGS"
+  LS_COMMON="$LS_COMMON -I NTUSER.DAT\* -I ntuser.dat\*"
+
+  alias open='cygstart'
+else
+
+  #Configure for Mac
+  export PATH=/usr/local/share/npm/bin:/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$HOME/bin:/Applications/Google\ Chrome.app/Contents/MacOS:$HOME/bin/FDK/Tools/osx:$HOME/src/depot_tools
+  export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
+  export JVM_ARGS="-Xms1024m -Xmx1024m -XX:MaxPermSize=512m"
+  export PYTHONPATH=/usr/local/lib/python2.7/site-packages:$PYTHONPATH
+  source ~/perl5/perlbrew/etc/bashrc
+  eval "$(rbenv init -)"
+
+  export EDITOR="mvim -f"
+fi
+
+alias vim="$EDITOR"
+alias gvim="$EDITOR"
+
+#. $HOME/src/powerline/powerline/bindings/zsh/powerline.zsh
+
+# set -o vi
+bindkey -v
+
+typeset -Ag FX FG BG
+
+zle-keymap-select () {
+  if [[ $KEYMAP = vicmd ]]; then
+    echo -ne "\e[\x32 q"
+  else
+    echo -ne "\e[\x36 q"
+  fi
+}
+
+zle-line-init () {
+  echo -ne "\e[\x36 q"
+}
+
+zle -N zle-keymap-select
+zle -N zle-line-init
+
+bindkey "^R" history-incremental-search-backward
+HISTSIZE=1000
+if (( ! EUID )); then
+  HISTFILE=~/.history_root
+else
+  HISTFILE=~/.history
+fi
+SAVEHIST=1000
+setopt SHARE_HISTORY
+setopt EXTENDED_HISTORY
+
+source $HOME/.zsh/prompt.zsh
+
+autoload -U compinit
+compinit
+
+if [ -x /usr/local/bin/gls ]
+then
+  test -n "$LS_COMMON" &&
+  alias ls="command gls $LS_COMMON"
+else
+  test -n "$LS_COMMON" &&
+  alias ls="command ls $LS_COMMON"
+fi
+
+alias ll="ls -Alh"
+
+alias ..="cd .."
+alias grep="grep --color=auto"
+alias egrep="egrep --color=auto"
+alias gs="git status"
+alias gd="git diff"
+alias gits="git"
+
+if [[ $SSH_TTY =~ /dev/.* ]]
+then
+  IS_SSH=1
+  export EDITOR="vim"
+fi
+
+

@@ -1,0 +1,19 @@
+"set bg=dark
+set guioptions+=T
+"set guifont=Source\ Code\ Pro\ for\ Powerline:h22
+set guifont=Inconsolata:h18
+set lines=90
+set columns=175
+set nu
+
+let g:html_use_css=1
+
+"colorscheme macvim
+colorscheme leo
+"colorscheme morning
+"colorscheme github
+
+"au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">/dev/tty')
+au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">' . $TTY)
+" end nerdtree commands
+
