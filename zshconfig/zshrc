@@ -6,15 +6,30 @@ LS_COMMON="-h --color=auto"
 
 if [[ $UNAME == "Cygwin" ]]
 then
-  export PATH=$PATH
-  VIM_ARGS="-u $HOME/.vimrc"
-  VIM_ARGS="$VIM_ARGS -U $HOME/.gvimrc"
-  RTP=`cygpath -w $HOME/.vim`
-  VIM_ARGS="$VIM_ARGS --cmd \"set rtp^=${(q)RTP}\""
+  #VIM_ARGS="-u $HOME/.vimrc"
+  #VIM_ARGS="$VIM_ARGS -U $HOME/.gvimrc"
+  # Not necessary when using windows symlinks made with mklink
+  #RTP=`cygpath -w $HOME/.vim`
+  #VIM_ARGS="$VIM_ARGS --cmd \"set rtp^=${(q)RTP}\""
   VIM_ARGS="$VIM_ARGS -f"
 
   export EDITOR="$HOME/bin/win.sh /cygdrive/c/ProgFilesX86/Vim/vim74/gvim.exe $VIM_ARGS"
   LS_COMMON="$LS_COMMON -I NTUSER.DAT\* -I ntuser.dat\*"
+
+  #JAVA_VERSION="1.8.0_25"
+  JAVA_VERSION="1.6.0_45"
+
+  ROOT=/cygdrive/c
+
+  export JAVA_HOME=$ROOT/ProgFiles/Java/jdk$JAVA_VERSION
+  export M2_HOME=$HOME/Applications/apache-maven-3.2.5
+  export GRADLE_HOME=$HOME/.gvm/gradle/current
+  export ANT_HOME=$HOME/Applications/apache-ant-1.9.4
+
+  export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin:$GRADLE_HOME/bin:$ANT_HOME/bin
+
+  # Mysql
+  export PATH="$PATH:/cygdrive/c/Program Files/MySQL/MySQL Server 5.6/bin"
 
   alias open='cygstart'
 else
@@ -96,3 +111,6 @@ then
 fi
 
 
+
+#THIS MUST BE AT THE END OF THE FILE FOR GVM TO WORK!!!
+[[ -s "$HOME/.gvm/bin/gvm-init.sh" ]] && source "$HOME/.gvm/bin/gvm-init.sh"
