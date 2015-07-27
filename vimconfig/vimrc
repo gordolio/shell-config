@@ -1,16 +1,21 @@
 syntax on
 filetype plugin indent on
 
+" Convert tabs to spaces
 set expandtab
-set shiftwidth=2
-set softtabstop=2
+" tabs are worth 3 spaces
+set shiftwidth=3
+set tabstop=3
+set softtabstop=3
+
+" automatically indent
+" in code blocks
 set smartindent
 
 highlight WhiteOnRed ctermfg=white ctermbg=red
 
 highlight ColorColumn ctermbg=magenta
 call matchadd('ColorColumn', '\%81v', 100)
-
 
 " Change the bad chars to use unicode chars
 exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"

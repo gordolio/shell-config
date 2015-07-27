@@ -5,14 +5,12 @@ export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
 export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:/opt/local/bin:$TC_SCRIPTS_HOME/bin
 
-source ~/.gvm/bin/gvm-init.sh
 
 export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
 export JVM_ARGS="-Xms1024m -Xmx1024m -XX:MaxPermSize=512m"
 
 export TTY=`tty`
 
-eval "$(rbenv init -)"
 
 export PYTHONPATH=/usr/local/lib/python2.7/site-packages:/opt/local/lib/python2.7/site-packages:$PYTHONPATH
 
@@ -84,7 +82,11 @@ else
 fi
 
 
+if [ -f $HOME/.gvm/bin/gvm-init.sh ]; then
+   source ~/.gvm/bin/gvm-init.sh
+fi
 
-
-PERL_MB_OPT="--install_base \"/Users/gordon/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=/Users/gordon/perl5"; export PERL_MM_OPT;
+which rbenv 2>&1 > /dev/null
+if [ $? = 0 ]; then
+   eval "$(rbenv init -)"
+fi
