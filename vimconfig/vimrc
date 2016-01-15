@@ -73,6 +73,8 @@ au BufRead,BufNewFile *.json set filetype=json foldmethod=syntax
 "au! Syntax spin source $HOME/.vim/syntax/json.vim
 au BufRead,BufNewFile *.tt set filetype=tt2html
 au BufRead,BufNewFile *.t set filetype=tt2html
+au BufRead,BufNewFile *.jad set filetype=java
+au BufRead,BufNewFile *.class silent set filetype=class
 
 "set autoindent
 let perl_includes_pod = 1
@@ -91,12 +93,15 @@ au FileType perl command -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
 au FileType json command -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
 au FileType xml command -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
 au FileType javascript command -range=% -nargs=* Tidy <line1>,<line2>! /Users/gordon/src/js-beautify/python/js-beautify -s 2 -
+augroup filetypedetect
 
 let mapleader=","
 au FileType javascript command Dash call SearchDash('javascript:')
 au FileType vim command Dash call SearchDash('vim:')
 au FileType perl command Dash call SearchDash('perl:')
 au FileType ruby command Dash call SearchDash('ruby:')
+
+
 map <leader>d :Dash<cr>
 function SearchDash(lib)
   let s:url = "dash://".a:lib.expand("<cword>")

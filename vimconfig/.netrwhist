@@ -1,0 +1,7 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =5
+let g:netrw_dirhist_1='/Users/gordon/Dropbox/src/ihg/buildScripts/patches/templates/guestapi/conf'
+let g:netrw_dirhist_2='/usr/local/etc/apache2/2.4/extra'
+let g:netrw_dirhist_3='/Users/gordon/src/alexaMoroni/luceneIndex'
+let g:netrw_dirhist_4='/Users/gordon/Dropbox/Darren/mtnsts-scripts/lib/MtnSts/RentManager/Schema'
+let g:netrw_dirhist_5='/Users/gordon/Dropbox/src/ihg/buildScripts/patches/replacements/mobileWebInstance/int/bin'

@@ -14,6 +14,7 @@ colorscheme leo
 "colorscheme github
 
 "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">/dev/tty')
-au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">' . $TTY)
+"au VimLeave * call system('echo hello world '.$TTY.'>'.$TTY)
+au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$TTY)
 " end nerdtree commands
 

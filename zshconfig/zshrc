@@ -3,11 +3,30 @@ export TC_SCRIPTS_HOME=$HOME/src/ihg/buildScripts
 
 export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:/opt/local/bin:$TC_SCRIPTS_HOME/bin
+export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin
 
 
-export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
-export JVM_ARGS="-Xms1024m -Xmx1024m -XX:MaxPermSize=512m"
+export JAVA_VERSION="1.8"
+export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
+export JVM_ARGS="-Xms1024m -Xmx1024m"
+export MAVEN_OPTS="-Xmx1024m"
+
+switchJava() {
+   if [[ $JAVA_VERSION == "1.7" ]]; then
+      export JAVA_VERSION="1.8"
+      export MAVEN_OPTS="-Xmx1024m"
+      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
+   elif [[ $JAVA_VERSION == "1.8" ]]; then
+      export JAVA_VERSION="1.9"
+      export MAVEN_OPTS="-Xmx1024m"
+      export JAVA_HOME="$HOME/src/jdk1.9.0.jdk/Contents/Home"
+   else
+      export JAVA_VERSION="1.7"
+      export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
+   fi
+   echo "Switching to java $JAVA_VERSION"
+}
 
 export TTY=`tty`
 
@@ -18,9 +37,8 @@ export LOLCOMMITS_FORK=1
 export LOLCOMMITS_DELAY=4
 export LOLCOMMITS_ANIMATE=3
 
-export HOMEBREW_GITHUB_API_TOKEN=9c6118c34ee1ea312c2617fe79c75b4ac0d5f815
+export HOMEBREW_GITHUB_API_TOKEN=`cat ~/.zsh/github_token.txt`
 
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 
 source ~/perl5/perlbrew/etc/bashrc
 
@@ -62,6 +80,8 @@ source $HOME/.zsh/prompt.zsh
 autoload -U compinit
 compinit
 
+source $HOME/.zsh/aws_zsh_completer.sh
+
 alias ls="gls --color=auto"
 alias ll="gls --color=auto -Alh"
 alias ..="cd .."
@@ -82,8 +102,8 @@ else
 fi
 
 
-if [ -f $HOME/.gvm/bin/gvm-init.sh ]; then
-   source ~/.gvm/bin/gvm-init.sh
+if [ -f $HOME/.sdkman/bin/sdkman-init.sh ]; then
+   source ~/.sdkman/bin/sdkman-init.sh
 fi
 
 which rbenv 2>&1 > /dev/null
