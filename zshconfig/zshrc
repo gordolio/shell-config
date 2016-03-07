@@ -6,10 +6,12 @@ export LSCOLORS=ExFxCxDxBxegedabagacad
 export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin
 
 
-export JAVA_VERSION="1.8"
-export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
+export JAVA_VERSION="1.7"
+#export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home"
 export JVM_ARGS="-Xms1024m -Xmx1024m"
-export MAVEN_OPTS="-Xmx1024m"
+export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+
 
 switchJava() {
    if [[ $JAVA_VERSION == "1.7" ]]; then
@@ -65,13 +67,13 @@ zle -N zle-keymap-select
 zle -N zle-line-init
 
 bindkey "^R" history-incremental-search-backward
-HISTSIZE=1000
+HISTSIZE=3000
 if (( ! EUID )); then
   HISTFILE=~/.history_root
 else
   HISTFILE=~/.history
 fi
-SAVEHIST=1000
+SAVEHIST=3000
 setopt SHARE_HISTORY
 setopt EXTENDED_HISTORY
 

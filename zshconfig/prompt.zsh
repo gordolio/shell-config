@@ -15,13 +15,16 @@ function precmd {
   local pwdsize=${#${(%):-%~}}
   PR_GIT_STATUS=`ruby -e "print (%x{git branch 2>/dev/null}.split(/\n/).grep(/^\*/).first || '').gsub(/^\* (.+)$/,'[\1] ')"`
   #PR_GIT_STATUS=`git branch 2>/dev/null | grep '^\*' | awk '{print "[" $2 "] "}'`
-  PR_GIT_SIZE="`echo $PR_GIT_STATUS | wc -c` - 1"
-  if [[ $PR_GIT_SIZE -lt 0 ]]; then
+  (( PR_GIT_SIZE = ${#${PR_GIT_STATUS}} ))
+  if [[ $PR_GIT_SIZE -lt 2 ]]; then
     PR_GIT_SIZE=0
   fi
 
-  if [[ "$promptsize + $pwdsize + $PR_GIT_SIZE" -gt $TERMWIDTH ]]; then
-    ((PR_PWDLEN=$TERMWIDTH - $promptsize - $PR_GIT_SIZE + 2))
+  if [[ "$promptsize + $pwdsize + $PR_GIT_SIZE + 1" -gt $TERMWIDTH ]]; then
+    (( PR_PWDLEN = $TERMWIDTH - $promptsize - $PR_GIT_SIZE ))
+    if [[ PR_PWDLEN -lt 0 ]]; then
+       PR_PWDLEN=0
+    fi
   else
     PR_FILLBAR="\${(l.(($TERMWIDTH - ($promptsize + $pwdsize + $PR_GIT_SIZE)))..${PR_HBAR}.)}"
   fi
