@@ -3,12 +3,17 @@ export TC_SCRIPTS_HOME=$HOME/src/ihg/buildScripts
 
 export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin
+export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin:$HOME/apps/maven/bin
 
 
 export JAVA_VERSION="1.7"
 #export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
-export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home"
+if [[ -d /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home ]]; then
+  export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home"
+else
+  export JAVA_HOME="/opt/jdk1.7.0_79"
+fi
+
 export JVM_ARGS="-Xms1024m -Xmx1024m"
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 
@@ -39,10 +44,13 @@ export LOLCOMMITS_FORK=1
 export LOLCOMMITS_DELAY=4
 export LOLCOMMITS_ANIMATE=3
 
-export HOMEBREW_GITHUB_API_TOKEN=`cat ~/.zsh/github_token.txt`
+if [[ -f $HOME/.zsh/github_token.txt ]]; then
+    export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.zsh/github_token.txt`
+fi
 
-
-source ~/perl5/perlbrew/etc/bashrc
+if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
+   source ~/perl5/perlbrew/etc/bashrc
+fi
 
 #. $HOME/src/powerline/powerline/bindings/zsh/powerline.zsh
 
@@ -84,8 +92,14 @@ compinit
 
 source $HOME/.zsh/aws_zsh_completer.sh
 
-alias ls="gls --color=auto"
-alias ll="gls --color=auto -Alh"
+which gls 2>&1 > /dev/null
+if [[ $? = 0 ]]; then
+  LS="gls"
+else
+  LS="ls"
+fi
+alias ls="$LS --color=auto"
+alias ll="$LS --color=auto -Alh"
 alias ..="cd .."
 alias grep="grep --color=auto"
 alias egrep="egrep --color=auto"
@@ -93,13 +107,18 @@ alias gs="git status"
 alias gd="git diff"
 alias gits="git"
 
-if [[ $SSH_TTY =~ /dev/.* ]]
-then
+
+which mvim 2>&1 > /dev/null
+HAS_MVIM_EXIT_CODE=$?
+if [[ $SSH_TTY =~ /dev/.* ]]; then
   IS_SSH=1
   export EDITOR="vim"
-else
+elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
   alias gvim="mvim -f"
   export EDITOR="mvim -f"
+  alias vim=$EDITOR
+else
+  export EDITOR="gvim -f"
   alias vim=$EDITOR
 fi
 
