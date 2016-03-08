@@ -48,6 +48,7 @@ source ~/perl5/perlbrew/etc/bashrc
 
 # set -o vi
 bindkey -v
+export KEYTIMEOUT=1
 
 typeset -Ag FX FG BG
 
@@ -67,6 +68,11 @@ zle -N zle-keymap-select
 zle -N zle-line-init
 
 bindkey "^R" history-incremental-search-backward
+bindkey "^?" backward-delete-char
+bindkey "^W" backward-kill-word
+bindkey "^H" backward-delete-char
+bindkey "^U" backward-kill-line
+
 HISTSIZE=3000
 if (( ! EUID )); then
   HISTFILE=~/.history_root
