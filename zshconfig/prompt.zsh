@@ -125,7 +125,12 @@ setprompt () {
   elif which apm > /dev/null; then
     PR_APM='$PR_RED${PR_APM_RESULT[(w)5,(w)6]/\% /%%}$PR_LIGHT_BLUE:'
   elif which pmset > /dev/null; then
+    pmset -g ps | grep InternalBattery 2>&1 > /dev/null
+    if [ $? = 0 ]; then
     PR_APM='$PR_RED${PR_APM_RESULT}%%${PR_CHARGE_RESULT}$PR_LIGHT_BLUE:'
+    else
+      PR_APM=''
+    fi
   else
     PR_APM=''
   fi
