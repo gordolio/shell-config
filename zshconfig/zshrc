@@ -5,7 +5,6 @@ export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
 export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin:$HOME/apps/maven/bin
 
-
 export JAVA_VERSION="1.7"
 #export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
 if [[ -d /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home ]]; then
@@ -92,6 +91,7 @@ setopt SHARE_HISTORY
 setopt EXTENDED_HISTORY
 
 source $HOME/.zsh/prompt.zsh
+fpath=(/usr/local/share/zsh-completions $fpath)
 
 autoload -U compinit
 compinit
@@ -112,6 +112,7 @@ alias egrep="egrep --color=auto"
 alias gs="git status"
 alias gd="git diff"
 alias gits="git"
+alias "git clean"="git clean -i"
 
 
 which mvim 2>&1 > /dev/null
@@ -136,4 +137,8 @@ fi
 which rbenv 2>&1 > /dev/null
 if [ $? = 0 ]; then
    eval "$(rbenv init -)"
+fi
+
+if [ -f /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
