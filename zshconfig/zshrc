@@ -23,9 +23,9 @@ switchJava() {
       export MAVEN_OPTS="-Xmx1024m"
       export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
    elif [[ $JAVA_VERSION == "1.8" ]]; then
-      export JAVA_VERSION="1.9"
+      export JAVA_VERSION="9"
       export MAVEN_OPTS="-Xmx1024m"
-      export JAVA_HOME="$HOME/src/jdk1.9.0.jdk/Contents/Home"
+      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
    else
       export JAVA_VERSION="1.7"
       export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
@@ -33,6 +33,7 @@ switchJava() {
    fi
    echo "Switching to java $JAVA_VERSION"
 }
+export STUDIO_JDK=$JAVA_HOME
 
 export TTY=`tty`
 
