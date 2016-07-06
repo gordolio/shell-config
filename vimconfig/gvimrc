@@ -1,7 +1,7 @@
 "set bg=dark
 set guioptions+=T
 "set guifont=Source\ Code\ Pro\ for\ Powerline:h22
-set guifont=Inconsolata:h18
+set guifont=Knack\ Regular\ Nerd\ Font\ Complete:h16
 set lines=40
 set columns=100
 set nu
@@ -9,9 +9,10 @@ set nu
 let g:html_use_css=1
 
 "colorscheme macvim
-colorscheme leo
+"colorscheme leo
 "colorscheme morning
 "colorscheme github
+colorscheme solarized
 
 "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">/dev/tty')
 "au VimLeave * call system('echo hello world '.$TTY.'>'.$TTY)
