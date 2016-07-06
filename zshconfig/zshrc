@@ -100,12 +100,12 @@ source $HOME/.zsh/aws_zsh_completer.sh
 
 which gls 2>&1 > /dev/null
 if [[ $? = 0 ]]; then
-  LS="gls"
+  alias ls="ls --color=auto"
+  alias ll="ls --color=auto -Alh"
 else
-  LS="ls"
+  alias ls="ls -G"
+  alias ll="ls -G -Alh"
 fi
-alias ls="$LS --color=auto"
-alias ll="$LS --color=auto -Alh"
 alias ..="cd .."
 alias grep="grep --color=auto"
 alias egrep="egrep --color=auto"
@@ -117,6 +117,8 @@ alias "git clean"="git clean -i"
 
 which mvim 2>&1 > /dev/null
 HAS_MVIM_EXIT_CODE=$?
+which gvim 2>&1 > /dev/null
+HAS_GVIM_EXIT_CODE=$?
 if [[ $SSH_TTY =~ /dev/.* ]]; then
   IS_SSH=1
   export EDITOR="vim"
@@ -124,7 +126,7 @@ elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
   alias gvim="mvim -f"
   export EDITOR="mvim -f"
   alias vim=$EDITOR
-else
+elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then
   export EDITOR="gvim -f"
   alias vim=$EDITOR
 fi
