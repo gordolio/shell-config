@@ -1,147 +1,89 @@
+# Path to your oh-my-zsh installation.
+export ZSH=/Users/gordon/.oh-my-zsh
 
-export TC_SCRIPTS_HOME=$HOME/src/ihg/buildScripts
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+ZSH_THEME="agnoster"
 
-export CLICOLOR=1
-export LSCOLORS=ExFxCxDxBxegedabagacad
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin:$HOME/apps/maven/bin
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
 
-export JAVA_VERSION="1.7"
-#export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
-if [[ -d /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home ]]; then
-  export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home"
-else
-  export JAVA_HOME="/opt/jdk1.7.0_79"
-fi
+# Uncomment the following line to use hyphen-insensitive completion. Case
+# sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
 
-export JVM_ARGS="-Xms1024m -Xmx1024m"
-export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+# Uncomment the following line to disable bi-weekly auto-update checks.
+# DISABLE_AUTO_UPDATE="true"
 
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
 
-switchJava() {
-   if [[ $JAVA_VERSION == "1.7" ]]; then
-      export JAVA_VERSION="1.8"
-      export MAVEN_OPTS="-Xmx1024m"
-      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
-   elif [[ $JAVA_VERSION == "1.8" ]]; then
-      export JAVA_VERSION="9"
-      export MAVEN_OPTS="-Xmx1024m"
-      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
-   else
-      export JAVA_VERSION="1.7"
-      export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
-      export JAVA_HOME=`/usr/libexec/java_home -v $JAVA_VERSION`
-   fi
-   echo "Switching to java $JAVA_VERSION"
-}
-export STUDIO_JDK=$JAVA_HOME
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
 
-export TTY=`tty`
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
 
+# Uncomment the following line to enable command auto-correction.
+ENABLE_CORRECTION="true"
 
-export PYTHONPATH=/usr/local/lib/python2.7/site-packages:/opt/local/lib/python2.7/site-packages:$PYTHONPATH
+# Uncomment the following line to display red dots whilst waiting for completion.
+COMPLETION_WAITING_DOTS="true"
 
-export LOLCOMMITS_FORK=1
-export LOLCOMMITS_DELAY=4
-export LOLCOMMITS_ANIMATE=3
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
 
-if [[ -f $HOME/.zsh/github_token.txt ]]; then
-    export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.zsh/github_token.txt`
-fi
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+HIST_STAMPS="yyyy-mm-dd"
 
-if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
-   source ~/perl5/perlbrew/etc/bashrc
-fi
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
 
-#. $HOME/src/powerline/powerline/bindings/zsh/powerline.zsh
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+plugins=(git jvm osx zsh-bd )
 
-# set -o vi
-bindkey -v
-export KEYTIMEOUT=1
+# User configuration
 
-typeset -Ag FX FG BG
+# export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+# export MANPATH="/usr/local/man:$MANPATH"
 
-zle-keymap-select () {
-  if [[ $KEYMAP = vicmd ]]; then
-    echo -ne "\e[\x32 q"
-  else
-    echo -ne "\e[\x36 q"
-  fi
-}
+source $ZSH/oh-my-zsh.sh
 
-zle-line-init () {
-  echo -ne "\e[\x36 q"
-}
+source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-zle -N zle-keymap-select
-zle -N zle-line-init
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
 
-bindkey "^R" history-incremental-search-backward
-bindkey "^?" backward-delete-char
-bindkey "^W" backward-kill-word
-bindkey "^H" backward-delete-char
-bindkey "^U" backward-kill-line
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
 
-HISTSIZE=3000
-if (( ! EUID )); then
-  HISTFILE=~/.history_root
-else
-  HISTFILE=~/.history
-fi
-SAVEHIST=3000
-setopt SHARE_HISTORY
-setopt EXTENDED_HISTORY
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
 
-source $HOME/.zsh/prompt.zsh
-fpath=(/usr/local/share/zsh-completions $fpath)
+# ssh
+# export SSH_KEY_PATH="~/.ssh/dsa_id"
 
-autoload -U compinit
-compinit
-
-source $HOME/.zsh/aws_zsh_completer.sh
-
-which gls 2>&1 > /dev/null
-if [[ $? = 0 ]]; then
-  alias ls="ls --color=auto"
-  alias ll="ls --color=auto -Alh"
-else
-  alias ls="ls -G"
-  alias ll="ls -G -Alh"
-fi
-alias ..="cd .."
-alias grep="grep --color=auto"
-alias egrep="egrep --color=auto"
-alias gs="git status"
-alias gd="git diff"
-alias gits="git"
-alias "git clean"="git clean -i"
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+alias tar=gtar
 
 
-which mvim 2>&1 > /dev/null
-HAS_MVIM_EXIT_CODE=$?
-which gvim 2>&1 > /dev/null
-HAS_GVIM_EXIT_CODE=$?
-if [[ $SSH_TTY =~ /dev/.* ]]; then
-  IS_SSH=1
-  export EDITOR="vim"
-elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
-  alias gvim="mvim -f"
-  export EDITOR="mvim -f"
-  alias vim=$EDITOR
-elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then
-  export EDITOR="gvim -f"
-  alias vim=$EDITOR
-fi
-
-
-if [ -f $HOME/.sdkman/bin/sdkman-init.sh ]; then
-   source ~/.sdkman/bin/sdkman-init.sh
-fi
-
-which rbenv 2>&1 > /dev/null
-if [ $? = 0 ]; then
-   eval "$(rbenv init -)"
-fi
-
-if [ -f /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-fi
