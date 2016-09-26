@@ -1,16 +1,8 @@
 
 
-export TC_SCRIPTS_HOME=$HOME/src/ihg/buildScripts
-
-#export CLICOLOR=1
-#export LSCOLORS=ExFxCxDxBxegedabagacad
 export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin:$HOME/apps/maven/bin
 
 export TTY=`tty`
-
-export LOLCOMMITS_FORK=1
-export LOLCOMMITS_DELAY=4
-export LOLCOMMITS_ANIMATE=3
 
 if [[ -f $HOME/.zsh/github_token.txt ]]; then
     export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.zsh/github_token.txt`
@@ -18,14 +10,12 @@ fi
 
 if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
    source ~/perl5/perlbrew/etc/bashrc
+   perlbrew switch perl-5.24.0
 fi
-perlbrew switch perl-5.24.0
-# perl6 brew
-eval "$($HOME/.rakudobrew/bin/rakudobrew init -)"
+if [[ -f $HOME/.rakudobrew/bin/rakudobrew ]]; then
+   eval "$($HOME/.rakudobrew/bin/rakudobrew init -)"
+fi
 
-#. $HOME/src/powerline/powerline/bindings/zsh/powerline.zsh
-
-# set -o vi
 bindkey -v
 export KEYTIMEOUT=1
 
@@ -73,6 +63,8 @@ alias tidy="json_xs -f json -t json-pretty"
 
 which mvim 2>&1 > /dev/null
 HAS_MVIM_EXIT_CODE=$?
+which gvim 2>&1 > /dev/null
+HAS_GVIM_EXIT_CODE=$?
 if [[ $SSH_TTY =~ /dev/.* ]]; then
   IS_SSH=1
   export EDITOR="vim"
@@ -80,9 +72,11 @@ elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
   export EDITOR="`which mvim`"
   alias gvim"$EDITOR"
   alias vim=$EDITOR
-else
+elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then
   export EDITOR="gvim -f"
   alias vim=$EDITOR
+else
+   export EDITOR="vim"
 fi
 
 if [ -f $HOME/.sdkman/bin/sdkman-init.sh ]; then
