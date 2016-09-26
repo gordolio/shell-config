@@ -1,11 +1,11 @@
 
 
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$TC_SCRIPTS_HOME/bin:$HOME/bin:$HOME/apps/maven/bin
+export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$HOME/bin:$HOME/apps/maven/bin
 
 export TTY=`tty`
 
-if [[ -f $HOME/.zsh/github_token.txt ]]; then
-    export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.zsh/github_token.txt`
+if [[ -f $HOME/.oh-my-zsh/custom/github_token.txt ]]; then
+    export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.oh-my-zsh/custom/github_token.txt`
 fi
 
 if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
@@ -60,6 +60,18 @@ alias gd="git diff"
 alias gits="git"
 alias "git clean"="git clean -i"
 alias tidy="json_xs -f json -t json-pretty"
+
+LS_COMMON="-hG"
+LS_COMMON="$LS_COMMON --color=auto"
+which cygpath 2>&1 > /dev/null
+if [[ $? == 0 ]]; then
+   LS_COMMON="$LS_COMMON -I NTUSER.DAT\* -I ntuser.\*"
+fi
+test -n "$LS_COMMON" &&
+alias ls="command ls $LS_COMMON"
+alias ll="ls -l"
+alias la="ls -a"
+alias lal="ll -a"
 
 which mvim 2>&1 > /dev/null
 HAS_MVIM_EXIT_CODE=$?
