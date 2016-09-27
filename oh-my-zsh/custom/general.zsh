@@ -1,6 +1,6 @@
+#!/usr/bin/zsh
 
-
-export PATH=/usr/local/bin:/usr/local/sbin:$PATH:/usr/local/mysql/bin:$HOME/bin:$HOME/apps/maven/bin
+export PATH="/usr/local/sbin:$PATH:/usr/local/mysql/bin:$HOME/bin:$HOME/apps/maven/bin"
 
 export TTY=`tty`
 
