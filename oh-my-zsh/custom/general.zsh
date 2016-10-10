@@ -1,6 +1,16 @@
 #!/usr/bin/zsh
 
-export PATH="/usr/local/sbin:$PATH:/usr/local/mysql/bin:$HOME/bin:$HOME/apps/maven/bin"
+export PATH="/usr/local/sbin:$PATH:$HOME/bin"
+
+if [[ -d /usr/local/mysql/bin ]]; then
+   export PATH="$PATH:/usr/local/mysql/bin"
+fi
+if [[ -d $HOME/apps/git-credential-manager ]]; then
+   export PATH="$PATH:$HOME/apps/git-credential-manager"
+fi
+if [[ -d $HOME/apps/maven/bin ]]; then
+   export PATH="$PATH:$HOME/apps/maven/bin"
+fi
 
 export TTY=`tty`
 
@@ -61,12 +71,17 @@ alias gits="git"
 alias "git clean"="git clean -i"
 alias tidy="json_xs -f json -t json-pretty"
 
+
 LS_COMMON="-hG"
 LS_COMMON="$LS_COMMON --color=auto"
+
 which cygpath 2>&1 > /dev/null
-if [[ $? == 0 ]]; then
+USE_CYGWIN=$?
+
+if [[ $USE_CYGWIN ]]; then
    LS_COMMON="$LS_COMMON -I NTUSER.DAT\* -I ntuser.\*"
 fi
+
 test -n "$LS_COMMON" &&
 alias ls="command ls $LS_COMMON"
 alias ll="ls -l"
@@ -92,7 +107,7 @@ else
 fi
 
 if [ -f $HOME/.sdkman/bin/sdkman-init.sh ]; then
-   source ~/.sdkman/bin/sdkman-init.sh
+   source $HOME/.sdkman/bin/sdkman-init.sh
 fi
 
 which rbenv 2>&1 > /dev/null
