@@ -10,8 +10,9 @@ fi
 
 if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
    source ~/perl5/perlbrew/etc/bashrc
-   perlbrew switch perl-5.24.0
+   perlbrew switch perl-5.28.2
 fi
+export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2:/usr/local/lib/perl/5.28.2/darwin-2level"
 if [[ -f $HOME/.rakudobrew/bin/rakudobrew ]]; then
    eval "$($HOME/.rakudobrew/bin/rakudobrew init -)"
 fi

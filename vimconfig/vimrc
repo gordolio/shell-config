@@ -4,9 +4,9 @@ filetype plugin indent on
 " Convert tabs to spaces
 set expandtab
 " tabs are worth 3 spaces
-set shiftwidth=3
-set tabstop=3
-set softtabstop=3
+set shiftwidth=2
+set tabstop=2
+set softtabstop=2
 
 " automatically indent
 " in code blocks
@@ -89,10 +89,10 @@ let java_space_errors = 1
 vmap <tab> >gv
 vmap <s-tab> <gv
 
-au FileType perl command -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
-au FileType json command -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
-au FileType xml command -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
-au FileType javascript command -range=% -nargs=* Tidy <line1>,<line2>! /Users/gordon/src/js-beautify/python/js-beautify -s 2 -
+au FileType perl command! -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
+au FileType json command! -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
+au FileType xml command! -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
+au FileType javascript command! -range=% -nargs=* Tidy <line1>,<line2>! /Users/gordon/src/js-beautify/python/js-beautify -s 2 -
 augroup filetypedetect
 
 let mapleader=","
