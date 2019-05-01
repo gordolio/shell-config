@@ -67,17 +67,10 @@ fi
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
-# Preferred editor for local and remote sessions
-if [[ -n $SSH_CONNECTION ]]; then
-  export EDITOR='vim'
-  alias vim='nocorrect vim'
-else
-  export EDITOR='mvim'
-  alias vim='nocorrect mvim'
-fi
-
 alias gradle='nocorrect gradle'
 alias bundle='nocorrect bundle'
+alias cpan='nocorrect cpan'
+alias which='nocorrect type -a'
 #alias perl='nocorrect perl'
 
 
@@ -98,7 +91,7 @@ alias bundle='nocorrect bundle'
 
 which gtar 2>&1 > /dev/null
 if [[ $? = 0 ]]; then
-   alias tar=gtar
+   alias tar=`which gtar`
 fi
 
 #export LDFLAGS="$LDFLAGS -L/usr/local/opt/libxml2/lib"

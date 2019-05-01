@@ -79,18 +79,24 @@ alias "git clean"="git clean -i"
 alias tidy="json_xs -f json -t json-pretty"
 
 
-LS_COMMON="-hG"
-LS_COMMON="$LS_COMMON --color=auto"
-
 which cygpath 2>&1 > /dev/null
-USE_CYGWIN=$?
+WHICH_CYGPATH_EXIT_CODE=$?
 
-if [[ $USE_CYGWIN ]]; then
-   LS_COMMON="$LS_COMMON -I NTUSER.DAT\* -I ntuser.\*"
+# use gnu version of ls (for use on mac when we get gls from homebrew)
+which gls 2>&1 > /dev/null
+WHICH_GLS_EXIT_CODE=$?
+
+if [[ $WHICH_CYGPATH_EXIT_CODE = 0 ]]; then
+  # cygwin has the GNU version of ls
+  alias ls="command ls -h --color=auto -I NTUSER.DAT\* -I ntuser.\*"
+elif [[ $WHICH_GLS_EXIT_CODE = 0 ]]; then
+  # when on homebrew, use GNU ls if it's installed
+  alias ls="`which gls` -h --color=auto"
+else
+  # we're on mac and we don't have GNU ls. fallback to bsd
+  alias ls="ls -hG"
 fi
 
-test -n "$LS_COMMON" &&
-alias ls="command ls $LS_COMMON"
 alias ll="ls -l"
 alias la="ls -a"
 alias lal="ll -a"
@@ -104,11 +110,11 @@ if [[ $SSH_TTY =~ /dev/.* ]]; then
   export EDITOR="vim"
 elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
   export EDITOR="`which mvim`"
-  alias gvim"$EDITOR"
-  alias vim=$EDITOR
+  alias gvim"nocorrect $EDITOR"
+  alias vim="nocorrect $EDITOR"
 elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then
   export EDITOR="gvim -f"
-  alias vim=$EDITOR
+  alias vim="nocorrect $EDITOR"
 else
    export EDITOR="vim"
 fi
