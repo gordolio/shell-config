@@ -107,13 +107,14 @@ which gvim 2>&1 > /dev/null
 HAS_GVIM_EXIT_CODE=$?
 if [[ $SSH_TTY =~ /dev/.* ]]; then
   IS_SSH=1
-  export EDITOR="vim"
+  export EDITOR="`which vim` -f"
 elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
-  export EDITOR="`which mvim`"
+  export EDITOR="`which mvim` -f"
   alias gvim"nocorrect $EDITOR"
   alias vim="nocorrect $EDITOR"
 elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then
-  export EDITOR="gvim -f"
+  export EDITOR="`which gvim` -f"
+  alias gvim="nocorrect $EDITOR"
   alias vim="nocorrect $EDITOR"
 else
    export EDITOR="vim"
