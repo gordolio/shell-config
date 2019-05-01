@@ -8,14 +8,20 @@ if [[ -f $HOME/.zsh/github_token.txt ]]; then
     export HOMEBREW_GITHUB_API_TOKEN=`cat $HOME/.zsh/github_token.txt`
 fi
 
+# BEGIN
+# this was used in perlbrew, but we don't need it
+# but still keeping it here in case it shows up.
 if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
    source ~/perl5/perlbrew/etc/bashrc
    perlbrew switch perl-5.28.2
 fi
-export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2:/usr/local/lib/perl/5.28.2/darwin-2level"
-if [[ -f $HOME/.rakudobrew/bin/rakudobrew ]]; then
-   eval "$($HOME/.rakudobrew/bin/rakudobrew init -)"
+if [[ -f "/usr/local/lib/perl/5.28.2" ]]; then
+  export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2"
 fi
+if [[ -f "/usr/local/lib/perl/5.28.2/darwin-2level" ]]; then
+  export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2/darwin-2level"
+fi
+# END
 
 bindkey -v
 export KEYTIMEOUT=1

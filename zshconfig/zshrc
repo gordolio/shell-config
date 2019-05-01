@@ -101,9 +101,9 @@ if [[ $? = 0 ]]; then
    alias tar=gtar
 fi
 
-export LDFLAGS="$LDFLAGS -L/usr/local/opt/libxml2/lib"
-export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libxml2/include"
-export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libxml2/lib/pkgconfig"
+#export LDFLAGS="$LDFLAGS -L/usr/local/opt/libxml2/lib"
+#export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libxml2/include"
+#export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libxml2/lib/pkgconfig"
 
 export PATH="$PATH:$HOME/Library/Python/3.7/bin"
 
