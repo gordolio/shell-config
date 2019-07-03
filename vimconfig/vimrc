@@ -75,6 +75,9 @@ au BufRead,BufNewFile *.tt set filetype=tt2html
 au BufRead,BufNewFile *.t set filetype=tt2html
 au BufRead,BufNewFile *.jad set filetype=java
 au BufRead,BufNewFile *.class silent set filetype=class
+au BufRead,BufNewFile *.dtrace setf dtrace
+au BufRead,BufNewFile *.dtruss setf dtrace
+
 
 "set autoindent
 let perl_includes_pod = 1

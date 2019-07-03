@@ -12,6 +12,10 @@ if [[ -d $HOME/apps/maven/bin ]]; then
    export PATH="$PATH:$HOME/apps/maven/bin"
 fi
 
+if [[ -d $HOME/Library/Android/sdk/platform-tools ]]; then
+  export PATH="$PATH:$HOME/Library/Android/sdk/platform-tools"
+fi
+
 export TTY=`tty`
 
 if [[ -f $HOME/.oh-my-zsh/custom/github_token.txt ]]; then
