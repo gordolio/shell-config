@@ -1,1 +1,6 @@
 **/*.*~
+
+tokens/*
+!tokens/.gitkeep
+
+**/*.swp
