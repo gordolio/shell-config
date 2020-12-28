@@ -4,3 +4,5 @@ tokens/*
 !tokens/.gitkeep
 
 **/*.swp
+
+vimconfig/test_json.json

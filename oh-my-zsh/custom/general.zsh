@@ -23,18 +23,12 @@ if [[ -f $HOME/.oh-my-zsh/custom/github_token.txt ]]; then
 fi
 
 # BEGIN
-# this was used in perlbrew, but we don't need it
-# but still keeping it here in case it shows up.
-if [[ -f ~/perl5/perlbrew/etc/bashrc ]]; then
-   source ~/perl5/perlbrew/etc/bashrc
-   perlbrew switch perl-5.28.2
-fi
-if [[ -f "/usr/local/lib/perl/5.28.2" ]]; then
-  export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2"
-fi
-if [[ -f "/usr/local/lib/perl/5.28.2/darwin-2level" ]]; then
-  export PERL5LIB="$PERL5LIB:/usr/local/lib/perl/5.28.2/darwin-2level"
-fi
+# keep perl modules working between perl upgrades
+export PATH="$HOME/perl5/bin:$PATH"
+export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
+export PERL_LOCAL_LIB_ROOT="$HOME/perl5:$PERL_LOCAL_LIB_ROOT"
+export PERL_MB_OPT="--install_base \"$HOME/perl5\""
+export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
 # END
 
 bindkey -v

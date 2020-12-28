@@ -1,6 +1,11 @@
 
-set -x PATH /usr/local/sbin $PATH $HOME/bin
 
+set -x PATH $HOME/src/v8-build/depot_tools $PATH
+set -x PATH /usr/local/bin /usr/local/sbin $PATH $HOME/bin
+
+if [ -d $HOME/.cargo/bin ]
+  set -x PATH $PATH $HOME/.cargo/bin
+end
 if [ -d /usr/local/mysql/bin ]
    set -x PATH $PATH /usr/local/mysql/bin
 end
@@ -21,18 +26,19 @@ if [ -f $HOME/src/shell-config/tokens/github_token.txt ]
    set -x HOMEBREW_GITHUB_API_TOKEN (cat $HOME/src/shell-config/tokens/github_token.txt)
 end
 
+#set -x RUBY_CONFIGURE_OPTS --with-open
+
 # BEGIN
 # perlbrew bashrc not compatible with fish
 #if test -f $HOME/perl5/perlbrew/etc/bashrc
 #   source ~/perl5/perlbrew/etc/bashrc
 #   perlbrew switch perl-5.28.2
 #end
-if [ -d /usr/local/lib/perl/5.30.0 ]
-  set -x PERL5LIB $PERL5LIB /usr/local/lib/perl/5.30.0
-end
-if [ -d /usr/local/lib/perl/5.30.0/darwin-2level ]
-  set -x PERL5LIB $PERL5LIB /usr/local/lib/perl/5.30.0/darwin-2level
-end
+set -x PATH "$HOME/perl5/bin" $PATH
+set -x PERL5LIB "$HOME/perl5/lib/perl5" $PERL5LIB
+set -x PERL_LOCAL_LIB_ROOT "$HOME/perl5" $PERL_LOCAL_LIB_ROOT
+set -x PERL_MB_OPT "--install_base \"$HOME/perl5\""
+set -x PERL_MM_OPT "INSTALL_BASE=$HOME/perl5"
 # END
 
 which cygpath 2>&1 > /dev/null
@@ -41,21 +47,29 @@ set -l which_cygpath_exit_code $status
 which gls 2>&1 > /dev/null
 set -l which_gls_exit_code $status
 
+which exa 2>&1 > /dev/null
+set -l which_exa_exit_code $status
+
 if [ $which_cygpath_exit_code = 0 ]
   # cygwin has the GNU version of ls
   alias ls "command ls -h --color=auto -I NTUSER.DAT\* -I ntuser.\*"
+else if [ $which_exa_exit_code = 0 ]
+  set -l exa (which exa)
+  alias ls "$exa"
+  alias ll="ls -l"
+  alias la="ls -a"
+  alias lal="ls -al"
 else if [ $which_gls_exit_code = 0 ]
   # when on homebrew, use GNU ls if it's installed
   set -l gls (which gls)
   alias ls "$gls -h --color=auto"
+  alias la="ls -a"
+  alias lal="ll -a"
 else
   # we're on mac and we don't have GNU ls. fallback to bsd
   alias ls "ls -hG"
 end
 
-alias ll="ls -l"
-alias la="ls -a"
-alias lal="ll -a"
 
 # open mvim instead of vim
 which mvim 2>&1 > /dev/null
@@ -92,4 +106,5 @@ set -g theme_display_user yes
 set -g theme_hide_hostname no
 
 
+status --is-interactive; and source (pyenv init -|psub)
 
