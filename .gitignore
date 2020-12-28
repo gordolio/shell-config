@@ -6,3 +6,4 @@ tokens/*
 **/*.swp
 
 vimconfig/test_json.json
+**/.DS_Store
