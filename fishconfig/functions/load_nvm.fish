@@ -1,4 +1,5 @@
 # ~/.config/fish/functions/load_nvm.fish
+if [ (which nvm) ]
 function load_nvm --on-variable="PWD"
   set -l default_node_version (nvm version default)
   set -l node_version (nvm version)
@@ -14,6 +15,7 @@ function load_nvm --on-variable="PWD"
     echo "Reverting to default Node version"
     nvm use default
   end
+end
 end
 
 
