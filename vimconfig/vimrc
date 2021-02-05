@@ -26,7 +26,8 @@ set backspace=2
 set nocompatible
 set ruler
 set showmode
-set viminfo='10,\"100,:20,%,n~/.viminfo
+" TODO 2021-01-05 find out what this viminfo does
+"set viminfo='10,\"100,:20,%,n~/.viminfo
 
 "hilight searches in LightBlue
 set hlsearch
@@ -42,8 +43,10 @@ nnoremap ; :
 
 
 
-au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
-au BufNewFile,BufRead *.txtmt setf mathdoc
+" 2021-01-05 Disabling this section - I don't know what it does
+" au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
+" au BufNewFile,BufRead *.txtmt setf mathdoc
+
 au BufRead /private/var/folders/*/sql* set ft=mysql
 
 call pathogen#infect()
@@ -58,17 +61,15 @@ function CloseMe()
   q
 endfunction
 
-" begin apex-vim setup
-let g:apex_backup_folder="/tmp/apex/backup"
-let g:apex_temp_folder="/tmp/apex/temp"
-let g:apex_deployment_error_log="error.log"
-let g:apex_properties_folder="/Users/gordon/.apex/properties"
-" end apex-vim setup
 
 "set rtp+=/usr/local/lib/python2.7/site-packages/Powerline-beta-py2.7.egg/powerline/bindings/vim
 
-au BufRead,BufNewFile *.spin set filetype=spin
-au! Syntax spin source $HOME/.vim/syntax/spin.vim
+
+" 2021-01-05 - I don't work with spin files anymore
+" au BufRead,BufNewFile *.spin set filetype=spin
+" au! Syntax spin source $HOME/.vim/syntax/spin.vim
+
+
 au BufRead,BufNewFile *.json set filetype=json foldmethod=syntax
 "au! Syntax spin source $HOME/.vim/syntax/json.vim
 au BufRead,BufNewFile *.tt set filetype=tt2html
@@ -96,8 +97,12 @@ set rtp+=/usr/local/opt/fzf
 
 au FileType perl command! -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
 au FileType json command! -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
+au FileType yaml command! -range=% -nargs=* Tidy call YamlTidy(<line1>,<line2>)
 au FileType xml command! -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
-au FileType javascript command! -range=% -nargs=* Tidy <line1>,<line2>! /Users/gordon/src/js-beautify/python/js-beautify -s 2 -
+
+"TODO use a proper javascript beautifier for this
+" au FileType javascript command! -range=% -nargs=* Tidy <line1>,<line2>! /Users/gordon/src/js-beautify/python/js-beautify -s 2 -
+
 augroup filetypedetect
 
 let mapleader=","
@@ -122,6 +127,17 @@ function JsonTidy(line1,line2)
   let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
   call writefile([text],tempfile)
   execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/json_tidy.js"
+  call system("rm ".tempfile)
+endfunction
+
+function YamlTidy(line1,line2)
+  let text = join(getline(a:line1, a:line2),'')
+  " let text = substitute(text,"'\([^']*\)'",'"\1"','g')
+  " let text = substitute(text,"\(, \|{\)\([a-zA-Z_]*\):",'\1"\2":','g')
+  " let text = substitute(text,', }',' }','g')
+  let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
+  call writefile([text],tempfile)
+  execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/yaml_tidy.js"
   call system("rm ".tempfile)
 endfunction
 

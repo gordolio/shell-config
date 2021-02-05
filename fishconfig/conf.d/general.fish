@@ -55,10 +55,19 @@ if [ $which_cygpath_exit_code = 0 ]
   alias ls "command ls -h --color=auto -I NTUSER.DAT\* -I ntuser.\*"
 else if [ $which_exa_exit_code = 0 ]
   set -l exa (which exa)
-  alias ls "$exa"
-  alias ll="ls -l"
-  alias la="ls -a"
-  alias lal="ls -al"
+  function ls
+    if [ "$argv" = '-Alh' ]
+      exa -alg
+      set_color --bold --italics --underline --background brwhite brred;
+      echo "Command is lal"
+      set_color normal
+    else
+      exa $argv
+    end
+  end
+  alias ll="$exa -lg"
+  alias la="$exa -a"
+  alias lal="$exa -alg"
 else if [ $which_gls_exit_code = 0 ]
   # when on homebrew, use GNU ls if it's installed
   set -l gls (which gls)

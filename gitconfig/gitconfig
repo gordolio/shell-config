@@ -1,0 +1,45 @@
+[user]
+   name = Gordon Child
+   email = gordon@gordonchild.com
+[diff]
+	tool = bc3
+[difftool]
+	bc3 = trustExitCode
+[merge]
+	tool = bc3
+[mergetool]
+   bc3 = trustExitCode
+[alias]
+   tatus = status
+   st = status
+   ci = commit
+  co = checkout
+  make-patch = "!bash -c \"cd ${GIT_PREFIX};git add .;git commit -m uncommited; git format-patch HEAD~1; git reset HEAD~1\""
+  difftool-all = difftool --dir-diff --no-symlinks
+#[url "ssh://git@github.com/"]
+#    insteadOf = https://github.com/
+[core]
+	precomposeUnicode = true
+[http]
+	postBuffer = 524288000
+[color]
+	ui = auto
+[credential]
+  #helper = !aws codecommit credential-helper $@
+	UseHttpPath = true
+	helper = osxkeychain
+[filesystem "Oracle Corporation|1.8.0_221|/dev/disk1s5"]
+	timestampResolution = 1001 milliseconds
+	minRacyThreshold = 0 nanoseconds
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[filesystem "AdoptOpenJDK|11.0.6|/dev/disk1s2"]
+	timestampResolution = 6000 nanoseconds
+	minRacyThreshold = 0 nanoseconds
+[pull]
+	ff = only
+[init]
+	defaultBranch = main

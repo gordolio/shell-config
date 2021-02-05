@@ -2,7 +2,8 @@ set bg=dark
 set guioptions+=T
 "set guifont=Source\ Code\ Pro\ for\ Powerline:h22
 "set guifont=Knack\ Regular\ Nerd\ Font\ Complete:h16
-set guifont=DankMonoNerdFontComplete-Regular:h16
+"set guifont=DankMonoNerdFontComplete-Regular:h16
+set guifont=IosevkaNerdFontCompleteM-:h17
 set lines=40
 set columns=100
 set nu
