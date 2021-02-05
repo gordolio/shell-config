@@ -1,13 +1,18 @@
 
 
 set -x PATH $HOME/src/v8-build/depot_tools $PATH
-if [ -d /opt/homebrew/bin ]
-  set -x PATH /opt/homebrew/bin $PATH
-end
-if [ -d /opt/homebrew/sbin ]
-  set -x PATH /opt/homebrew/sbin $PATH
+if [ -d /opt/homebrew ]
+  set -x PATH /opt/homebrew/bin /opt/homebrew/sbin $PATH
 end
 set -x PATH /usr/local/bin /usr/local/sbin $PATH $HOME/bin
+
+if test -d (brew --prefix)"/share/fish/completions"
+    set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/completions
+end
+
+if test -d (brew --prefix)"/share/fish/vendor_completions.d"
+    set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/vendor_completions.d
+end
 
 if [ -d $HOME/.cargo/bin ]
   set -x PATH $PATH $HOME/.cargo/bin
