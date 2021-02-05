@@ -1,6 +1,12 @@
 
 
 set -x PATH $HOME/src/v8-build/depot_tools $PATH
+if [ -d /opt/homebrew/bin ]
+  set -x PATH /opt/homebrew/bin $PATH
+end
+if [ -d /opt/homebrew/sbin ]
+  set -x PATH /opt/homebrew/sbin $PATH
+end
 set -x PATH /usr/local/bin /usr/local/sbin $PATH $HOME/bin
 
 if [ -d $HOME/.cargo/bin ]
