@@ -1,5 +1,8 @@
 # This file contains fish universal variable definitions.
 # VERSION: 3.0
+SETUVAR --path CDPATH:\x2e\x1e/Users/gordon
+SETUVAR __fish_init_1_22_0:\x1d
+SETUVAR __fish_init_1_23_0:\x1d
 SETUVAR __fish_init_2_39_8:\x1d
 SETUVAR __fish_init_2_3_0:\x1d
 SETUVAR __fish_init_3_x:\x1d
