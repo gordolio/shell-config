@@ -1,5 +1,8 @@
+package autojump
 package bass
 package foreign-env
+package fzf
+package fzf-autojump
 package nvm
 package rbenv
 package sdk
