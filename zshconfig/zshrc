@@ -139,9 +139,6 @@ if [[ -d $HOME/src/chromium/depot_tools ]]; then
   export PATH="$PATH:$HOME/src/chromium/depot_tools"
 fi
 
-if [[ -d $HOME/src/emsdk-master ]]; then
-  alias emsdk_install="source $HOME/src/emsdk-master/emsdk_env.sh"
-fi
 
 # heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;

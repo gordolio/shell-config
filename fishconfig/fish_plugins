@@ -1,4 +1,6 @@
 reitzig/sdkman-for-fish
 jorgebucaran/fisher
 jorgebucaran/nvm.fish
-edc/bass
+FabioAntunes/fish-nvm
+rbenv/fish-rbenv
+jethrokuan/z

@@ -26,6 +26,12 @@ set backspace=2
 set nocompatible
 set ruler
 set showmode
+
+" make semicolon also work as colon for commands
+nnoremap ; :
+
+
+
 " TODO 2021-01-05 find out what this viminfo does
 "set viminfo='10,\"100,:20,%,n~/.viminfo
 
@@ -48,8 +54,6 @@ nnoremap ; :
 " au BufNewFile,BufRead *.txtmt setf mathdoc
 
 au BufRead /private/var/folders/*/sql* set ft=mysql
-
-call pathogen#infect()
 
 " nerdtree commands
 function OpenMe()
@@ -126,7 +130,7 @@ function JsonTidy(line1,line2)
   let text = substitute(text,', }',' }','g')
   let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
   call writefile([text],tempfile)
-  execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/json_tidy.js"
+  execute a:line1.",".a:line2." ! cat ".tempfile." | ~/.nvm/nvm-exec node ~/.vim/json_tidy.js"
   call system("rm ".tempfile)
 endfunction
 
@@ -165,3 +169,30 @@ function! HLNext (blinktime)
         call matchdelete(ring)
         redraw
 endfunction
+
+
+filetype off
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" let Vundle manage Vundle
+" required!
+Bundle 'VundleVim/Vundle.vim'
+
+" My Bundles here:
+"
+" original repos on github
+Bundle 'dracula/vim'
+Bundle 'chr4/nginx'
+Bundle 'vim-airline/vim-airline'
+Bundle 'vim-airline/vim-airline-themes'
+Bundle 'dag/vim-fish'
+Bundle 'udalov/kotlin-vim'
+
+Bundle 'L9'
+Bundle 'FuzzyFinder'
+
+call vundle#end()
+filetype plugin indent on
+

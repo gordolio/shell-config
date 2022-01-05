@@ -1,10 +1,26 @@
 
 
 set -x PATH $HOME/src/v8-build/depot_tools $PATH
+
+if [ -d /usr/local/bin ]
+  set -x PATH /usr/local/bin $PATH
+end
+if [ -d /usr/local/sbin ]
+  set -x PATH /usr/local/sbin $PATH
+end
+
 if [ -d /opt/homebrew ]
   set -x PATH /opt/homebrew/bin /opt/homebrew/sbin $PATH
 end
-set -x PATH /usr/local/bin /usr/local/sbin $PATH $HOME/bin
+
+if [ -d $HOME/bin ]
+  set -x PATH $HOME/bin $PATH
+end
+
+if [ -d $HOME/src/emsdk ]
+  set -x PATH $HOME/src/emsdk $HOME/src/emsdk/node/14.15.5_64bit/bin $HOME/src/emsdk/upstream/emscripten $PATH
+end
+
 
 if test -d (brew --prefix)"/share/fish/completions"
     set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/completions
@@ -14,11 +30,18 @@ if test -d (brew --prefix)"/share/fish/vendor_completions.d"
     set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/vendor_completions.d
 end
 
+set -x PAGER (which less)" -X -F"
+
+#set -x PATH (python3 -m site --user-base)/bin $PATH
+
+
 if [ -d $HOME/.cargo/bin ]
   set -x PATH $PATH $HOME/.cargo/bin
 end
-if [ -d /usr/local/mysql/bin ]
-   set -x PATH $PATH /usr/local/mysql/bin
+if [ -d /opt/homebrew/mysql/bin ]
+  set -x PATH $PATH /opt/homebrew/mysql/bin
+else if [ -d /usr/local/mysql/bin ]
+  set -x PATH $PATH /usr/local/mysql/bin
 end
 if [ -d $HOME/apps/git-credential-manager ]
    set -x PATH $PATH $HOME/apps/git-credential-manager
@@ -40,11 +63,11 @@ end
 #set -x RUBY_CONFIGURE_OPTS --with-open
 
 # BEGIN
-# perlbrew bashrc not compatible with fish
-#if test -f $HOME/perl5/perlbrew/etc/bashrc
-#   source ~/perl5/perlbrew/etc/bashrc
-#   perlbrew switch perl-5.28.2
-#end
+if test -f $HOME/perl5/perlbrew/etc/perlbrew.fish
+   source ~/perl5/perlbrew/etc/perlbrew.fish
+   #perlbrew switch perl-5.34.0
+end
+
 set -x PATH "$HOME/perl5/bin" $PATH
 set -x PERL5LIB "$HOME/perl5/lib/perl5" $PERL5LIB
 set -x PERL_LOCAL_LIB_ROOT "$HOME/perl5" $PERL_LOCAL_LIB_ROOT
@@ -67,8 +90,37 @@ if [ $which_cygpath_exit_code = 0 ]
 else if [ $which_exa_exit_code = 0 ]
   set -l exa (which exa)
   function ls
+    #set realCommand ""
+    #set realArg ""
+    #set matches (string match -ar '\\^(\\-Alh)( ?.*)' $argv)
+#
+#    if [ $matches ]
+#      if [ $matches[1] == '-Alh' ]
+#        set realCommand "lal"
+#        set realArg "-alg"
+#      else if [ $matches[1] == '-Al' ]
+#        set realCommand "la"
+#        set realArg "-a"
+#      else if [ $matches[1] == '-A' ]
+#        set realCommand "la"
+#        set realArg "-a"
+#      end
+#    end
+
+#    if [ $realCommand != "" ]
+#      if [ $argv ]
+#        exa $argv
+#      else
+#        exa
+#      end
+#    else
+#      exa $realArg $argv
+#      set_color --bold --italics --underline --background brwhite brred;
+#      echo "Command is $realCommand"
+#      set_color normal
+#    end
     if [ "$argv" = '-Alh' ]
-      exa -alg
+      exa --icons -alg
       set_color --bold --italics --underline --background brwhite brred;
       echo "Command is lal"
       set_color normal
@@ -76,9 +128,15 @@ else if [ $which_exa_exit_code = 0 ]
       exa $argv
     end
   end
-  alias ll="$exa -lg"
-  alias la="$exa -a"
-  alias lal="$exa -alg"
+  function ll
+    exa --icons -lg $argv
+  end
+  function la
+    exa -a $argv
+  end
+  function lal
+    exa --icons -alg $argv
+  end
 else if [ $which_gls_exit_code = 0 ]
   # when on homebrew, use GNU ls if it's installed
   set -l gls (which gls)
@@ -103,9 +161,9 @@ if string match -r -q '/dev/.*' $SSH_TTY
   set -x EDITOR "$vim -f"
 else if [ $has_mvim_exit_code = 0 ]
   set -l vim (which mvim)
-  set -x EDITOR "$vim -f"
-  alias gvim $EDITOR
-  alias vim $EDITOR
+  set -x EDITOR "$vim -f --nomru"
+  alias gvim "$vim -f"
+  alias vim "$vim -f"
 else if [ $has_gvim_exit_code = 0 ]
   set -l vim (which gvim)
   set -x EDITOR "$vim -f"
@@ -125,8 +183,20 @@ end
 set -g theme_display_user yes
 set -g theme_hide_hostname no
 
+which pyenv 2>&1 > /dev/null
+set -l which_pyenv_exit_code $status
+if [ $which_pyenv_exit_code = 0 ]
+  # old method
+  # status --is-interactive; and source (pyenv init -|psub)
+  # new method
+  status is-login; and pyenv init --path | source
+  #pyenv init - | source
+end
 
-if [ (which pyenv) ]
-  status --is-interactive; and source (pyenv init -|psub)
+# You must call it on initialization or listening to directory switching won't work
+which nvm 2>&1 > /dev/null
+set -l which_nvm_exit_code $status
+if [ $which_nvm_exit_code = 0 ]
+  load_nvm
 end
 
