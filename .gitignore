@@ -7,3 +7,5 @@ tokens/*
 
 vimconfig/test_json.json
 **/.DS_Store
+
+vimconfig/bundle/*

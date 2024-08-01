@@ -8,6 +8,8 @@ set shiftwidth=2
 set tabstop=2
 set softtabstop=2
 
+set shell=/bin/bash
+
 " automatically indent
 " in code blocks
 set smartindent
@@ -130,7 +132,7 @@ function JsonTidy(line1,line2)
   let text = substitute(text,', }',' }','g')
   let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
   call writefile([text],tempfile)
-  execute a:line1.",".a:line2." ! cat ".tempfile." | ~/.nvm/nvm-exec node ~/.vim/json_tidy.js"
+  execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/json_tidy.js"
   call system("rm ".tempfile)
 endfunction
 
@@ -178,21 +180,66 @@ call vundle#begin()
 
 " let Vundle manage Vundle
 " required!
-Bundle 'VundleVim/Vundle.vim'
+Plugin 'VundleVim/Vundle.vim'
 
 " My Bundles here:
 "
 " original repos on github
-Bundle 'dracula/vim'
-Bundle 'chr4/nginx'
-Bundle 'vim-airline/vim-airline'
-Bundle 'vim-airline/vim-airline-themes'
-Bundle 'dag/vim-fish'
-Bundle 'udalov/kotlin-vim'
+Plugin 'dracula/vim'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
 
-Bundle 'L9'
-Bundle 'FuzzyFinder'
+Plugin 'chr4/nginx'
+Plugin 'dag/vim-fish'
+Plugin 'udalov/kotlin-vim'
+
+Plugin 'L9'
+Plugin 'FuzzyFinder'
+
+Plugin 'github/copilot.vim'
 
 call vundle#end()
 filetype plugin indent on
 
+if has("gui_vimr")
+  " VimR specific stuff
+  set bg=dark
+  set guifont=
+  set lines=40
+  set columns=100
+  set nu
+
+  color dracula
+
+  "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$TTY)
+  "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$DISPLAY)
+endif
+
+if has("gui_macvim")
+  " MacVim specific stuff
+  set bg=dark
+  set guioptions+=T
+
+  set lines=40
+  set columns=100
+  set nu
+  set guifont=JetBrainsMono\ Nerd\ Font:h14
+
+  let g:html_use_css=1
+
+  color dracula
+
+  "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$TTY)
+endif
+
+if exists("g:neovide")
+  " Neovide specific stuff
+  set bg=dark
+  set guioptions+=T
+  set guifont=JetBrainsMono\ Nerd\ Font:h14  
+  set lines=40
+  set columns=100
+  set nu
+
+  color dracula
+endif
