@@ -1,6 +1,17 @@
 [user]
   name = Gordon Child
   email = gordon@gordonchild.com
+
+#[diff "ignoreCommas"]
+#  textconv = ~/bin/remove-trailing-commas.sh
+
+[alias]
+    diff-ignore-commas = "!f() { git diff --no-index --word-diff \"$1\" <(sed 's/,$//' \"$2\") <(sed 's/,$//' \"$3\"); }; f"
+
+
+[includeIf "gitdir:~/src/mavely/"]
+  path = ~/src/mavely/.gitconfig
+
 [diff]
   tool = bc3
   #tool = idea
@@ -9,6 +20,10 @@
 
 [difftool "idea"]
   cmd = /usr/local/bin/idea diff $(cd $(dirname "$LOCAL") && pwd)/$(basename "$LOCAL") $(cd $(dirname "$REMOTE") && pwd)/$(basename "$REMOTE")
+
+[difftool "meld"]
+  trustExitCode = true
+  cmd = open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"
 
 [merge]
   tool = bc3
@@ -20,6 +35,11 @@
 [mergetool "idea"]
   cmd = /usr/local/bin/idea merge $(cd $(dirname "$LOCAL") && pwd)/$(basename "$LOCAL") $(cd $(dirname "$REMOTE") && pwd)/$(basename "$REMOTE") $(cd $(dirname "$BASE") && pwd)/$(basename "$BASE") $(cd $(dirname "$MERGED") && pwd)/$(basename "$MERGED")
   trustExitCode = true
+
+[mergetool "meld"]
+  trustExitCode = true
+  cmd = open -W -a Meld --args --auto-merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\"
+
 
 [alias]
   tatus = status
