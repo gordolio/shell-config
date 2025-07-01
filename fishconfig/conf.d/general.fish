@@ -1,6 +1,7 @@
 
 
-set -x PATH $HOME/src/v8-build/depot_tools $PATH
+#depot_tools is now in src/chromium/depot_tools
+#set -x PATH $HOME/src/v8-build/depot_tools $PATH
 
 if [ -d /usr/local/bin ]
   set -x PATH /usr/local/bin $PATH
@@ -17,9 +18,13 @@ if [ -d $HOME/bin ]
   set -x PATH $HOME/bin $PATH
 end
 
-if [ -d $HOME/src/emsdk ]
-  set -x PATH $HOME/src/emsdk $HOME/src/emsdk/node/14.15.5_64bit/bin $HOME/src/emsdk/upstream/emscripten $PATH
+if [ -d $HOME/.claude/local ]
+  set -x PATH $HOME/.claude/local $PATH
 end
+
+#if [ -d $HOME/src/emsdk ]
+#  set -x PATH $HOME/src/emsdk $HOME/src/emsdk/node/14.15.5_64bit/bin $HOME/src/emsdk/upstream/emscripten $PATH
+#end
 
 
 if test -d (brew --prefix)"/share/fish/completions"
@@ -81,14 +86,14 @@ set -l which_cygpath_exit_code $status
 which gls 2>&1 > /dev/null
 set -l which_gls_exit_code $status
 
-which exa 2>&1 > /dev/null
-set -l which_exa_exit_code $status
+which eza 2>&1 > /dev/null
+set -l which_eza_exit_code $status
 
 if [ $which_cygpath_exit_code = 0 ]
   # cygwin has the GNU version of ls
   alias ls "command ls -h --color=auto -I NTUSER.DAT\* -I ntuser.\*"
-else if [ $which_exa_exit_code = 0 ]
-  set -l exa (which exa)
+else if [ $which_eza_exit_code = 0 ]
+  set -l eza (which eza)
   function ls
     #set realCommand ""
     #set realArg ""
@@ -120,22 +125,22 @@ else if [ $which_exa_exit_code = 0 ]
 #      set_color normal
 #    end
     if [ "$argv" = '-Alh' ]
-      exa --icons -alg
+      eza --icons -alg
       set_color --bold --italics --underline --background brwhite brred;
       echo "Command is lal"
       set_color normal
     else
-      exa $argv
+      eza $argv
     end
   end
   function ll
-    exa --icons -lg $argv
+    eza --icons -lg $argv
   end
   function la
-    exa -a $argv
+    eza -a $argv
   end
   function lal
-    exa --icons -alg $argv
+    eza --icons -alg $argv
   end
 else if [ $which_gls_exit_code = 0 ]
   # when on homebrew, use GNU ls if it's installed
@@ -149,7 +154,9 @@ else
 end
 
 
-# open mvim instead of vim
+# open neovide instead of vim
+which neovide 2>&1 > /dev/null
+set -l has_neovide_exit_code $status
 which mvim 2>&1 > /dev/null
 set -l has_mvim_exit_code $status
 which gvim 2>&1 > /dev/null
@@ -159,6 +166,11 @@ if string match -r -q '/dev/.*' $SSH_TTY
   set -l is_ssh 1
   set -l vim (which vim)
   set -x EDITOR "$vim -f"
+else if [ $has_neovide_exit_code = 0 ]
+  set -l vim (which neovide)
+  set -x EDITOR "$vim --no-fork 2>/dev/null"
+  alias gvim $EDITOR
+  alias vim $EDITOR
 else if [ $has_mvim_exit_code = 0 ]
   set -l vim (which mvim)
   set -x EDITOR "$vim -f --nomru"
@@ -180,8 +192,8 @@ end
 
 
 # show username
-set -g theme_display_user yes
-set -g theme_hide_hostname no
+#set -g theme_display_user yes
+#set -g theme_hide_hostname no
 
 which pyenv 2>&1 > /dev/null
 set -l which_pyenv_exit_code $status
@@ -199,4 +211,7 @@ set -l which_nvm_exit_code $status
 if [ $which_nvm_exit_code = 0 ]
   load_nvm
 end
+
+#set fish_vi_force_cursor 1
+fish_vi_key_bindings
 

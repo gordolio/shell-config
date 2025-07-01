@@ -12,6 +12,10 @@ if [[ -d $HOME/apps/maven/bin ]]; then
    export PATH="$PATH:$HOME/apps/maven/bin"
 fi
 
+if [[ -d /opt/homebrew ]]; then
+  export PATH="$PATH:/opt/homebrew/bin"
+fi
+
 if [[ -d $HOME/Library/Android/sdk/platform-tools ]]; then
   export PATH="$PATH:$HOME/Library/Android/sdk/platform-tools"
 fi
@@ -99,15 +103,15 @@ alias ll="ls -l"
 alias la="ls -a"
 alias lal="ll -a"
 
-which mvim 2>&1 > /dev/null
-HAS_MVIM_EXIT_CODE=$?
+which vimr 2>&1 > /dev/null
+HAS_VIMR_EXIT_CODE=$?
 which gvim 2>&1 > /dev/null
 HAS_GVIM_EXIT_CODE=$?
 if [[ $SSH_TTY =~ /dev/.* ]]; then
   IS_SSH=1
   export EDITOR="`which vim` -f"
-elif [[ $HAS_MVIM_EXIT_CODE = 0 ]]; then
-  export EDITOR="`which mvim` -f"
+elif [[ $HAS_VIMR_EXIT_CODE = 0 ]]; then
+  export EDITOR="`which vimr` -f"
   alias gvim"nocorrect $EDITOR"
   alias vim="nocorrect $EDITOR"
 elif [[ $HAS_GVIM_EXIT_CODE = 0 ]]; then

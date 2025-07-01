@@ -38,6 +38,7 @@ nnoremap ; :
 "set viminfo='10,\"100,:20,%,n~/.viminfo
 
 "hilight searches in LightBlue
+"This comes from Damian Conway's .vimrc
 set hlsearch
 hi Search guibg=LightBlue
 
@@ -99,7 +100,17 @@ let java_space_errors = 1
 vmap <tab> >gv
 vmap <s-tab> <gv
 
-set rtp+=/usr/local/opt/fzf
+" Double-click to toggle fold
+"nnoremap <2-LeftMouse> za
+
+" Shift+space to toggle all folds under cursor
+"nnoremap <S-space> zA
+
+if isdirectory('/opt/homebrew')
+  set rtp+=/opt/homebrew/opt/fzf
+elseif isdirectory('/usr/local/opt')
+  set rtp+=/usr/local/opt/fzf
+endif
 
 au FileType perl command! -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
 au FileType json command! -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
@@ -162,14 +173,18 @@ map Q :q
 set laststatus=2
 
 function! HLNext (blinktime)
-        let [bufnum, lnum, col, off] = getpos('.')
-        let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
-        let target_pat = '\c\%#'.@/
-        let ring = matchadd('WhiteOnRed', target_pat, 101)
-        redraw
-        exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
-        call matchdelete(ring)
-        redraw
+  let [bufnum, lnum, col, off] = getpos('.')
+  let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
+  let target_pat = '\c\%#'.@/
+  let blinks = 3
+  for n in range(1, blinks)
+    let red = matchadd('WhiteOnRed', target_pat, 101)
+    redraw
+    exec 'sleep ' . float2nr(a:blinktime / (2*blinks) * 1000) . 'm'
+    call matchdelete(red)
+    redraw
+    exec 'sleep ' . float2nr(a:blinktime / (2*blinks) * 1000) . 'm'
+  endfor
 endfunction
 
 
@@ -188,6 +203,7 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'dracula/vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
+Plugin 'jparise/vim-graphql'
 
 Plugin 'chr4/nginx'
 Plugin 'dag/vim-fish'
@@ -195,6 +211,7 @@ Plugin 'udalov/kotlin-vim'
 
 Plugin 'L9'
 Plugin 'FuzzyFinder'
+Plugin 'elzr/vim-json'
 
 Plugin 'github/copilot.vim'
 
@@ -236,10 +253,44 @@ if exists("g:neovide")
   " Neovide specific stuff
   set bg=dark
   set guioptions+=T
-  set guifont=JetBrainsMono\ Nerd\ Font:h14  
+
   set lines=40
   set columns=100
   set nu
+  set guifont=JetBrainsMono\ Nerd\ Font:h14  
+
+  let g:html_use_css=1
+
+  "nmap <D-v> "+p
+  " Paste without formatting
+  imap <D-v> <ESC>:set paste<CR>"+p:set nopaste<CR>i
+  cmap <D-v> <C-R>+
+  vmap <D-v> "+p
+
+  " CMD+C to copy to clipboard
+  vmap <D-c> "+y
+  " CMD+X to cut to clipboard
+  vmap <D-x> "+x
+  " Select all
+  nmap <D-a> gg<S-v>G
+
+  let g:neovide_cursor_animation_length = 0
+  let g:neovide_cursor_trail_size = 0
+"  let g:neovide_cursor_antialiasing = v:false
+  let g:neovide_cursor_animate_in_insert_mode = v:false
+  let g:neovide_cursor_animate_command_line = v:false
+"  let g:neovide_cursor_vfx_mode = ""
+  let g:neovide_scroll_animation_length = 0
+"  let g:neovide_floating_blur_amount_x = 0
+"  let g:neovide_floating_blur_amount_y = 0
+  let g:neovide_ligatures = v:false
+
+  set shada='10,\"100,:20,%,n~/.local/share/nvim/shada/main.shada
+
+  au VimLeave * sleep 100m | call system('echo -e -n "\033]50;StealFocus\007">' . $TTY)
+
+  " Jump to last position when reopening a file
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
   color dracula
 endif

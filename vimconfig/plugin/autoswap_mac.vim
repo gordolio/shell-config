@@ -94,19 +94,50 @@ endfunction
 "
 function! AS_M_DetectActiveWindow (filename)
     let shortname = fnamemodify(a:filename,":t")
-    let active_window = system('osascript -e '' tell application "MacVim" to every window whose (name begins with "'.shortname.' " and name ends with "VIM")''')
-    if (strlen(active_window) == 0)
-       let active_window = system('osascript -e ''tell application "iTerm" to every window whose (name begins with "'.shortname.' " and name ends with "VIM")''')
+    echom "Debugging: Checking for file: " . shortname
+
+    " First, check for MacVim windows...
+    let active_window = system('osascript -e '' tell application "MacVim" to every window whose (name begins with "'.shortname.' " and name contains "VIM")''')
+    echom "Debugging: MacVim result: '" . active_window . "'"
+
+    " If we found a window id, return it immediately
+    if active_window =~ 'window id'
+        let active_window = substitute(active_window, '^window id \d\+\zs\_.*', '', '')
+        echom "Debugging: Found MacVim window: '" . active_window . "'"
+        return active_window
     endif
-    let active_window = substitute(active_window, '^window id \d\+\zs\_.*', '', '')
-    return (active_window =~ 'window' ? active_window : "")
+
+    " If not found, check iTerm windows...
+    let active_window = system('osascript -e ''tell application "iTerm" to every window whose (name begins with "'.shortname.' " and name contains "VIM")''')
+    echom "Debugging: iTerm result: '" . active_window . "'"
+    if active_window =~ 'window id'
+        let active_window = substitute(active_window, '^window id \d\+\zs\_.*', '', '')
+        echom "Debugging: Found iTerm window: '" . active_window . "'"
+        return active_window
+    endif
+
+    " If still not found, check Terminal windows...
+    let active_window = system('osascript -e ''tell application "Terminal" to every window whose (name begins with "'.shortname.' " and name contains "VIM")''')
+    echom "Debugging: Terminal result: '" . active_window . "'"
+    if active_window =~ 'window id'
+        let active_window = substitute(active_window, '^window id \d\+\zs\_.*', '', '')
+        echom "Debugging: Found Terminal window: '" . active_window . "'"
+        return active_window
+    endif
+
+    echom "Debugging: No window found"
+    return ""
 endfunction
-
-
 " Switch to terminal window specified...
 "
 function! AS_M_SwitchToActiveWindow (active_window)
-    call system('osascript -e ''tell application "Terminal" to set frontmost of '.a:active_window.' to true''')
+    " Try both, but put your primary terminal first
+    if has('gui_macvim')
+        call system('osascript -e ''tell application "MacVim" to set frontmost of ' . a:active_window . ' to true''')
+    endif
+    " Change the order of these based on which terminal you're using
+    call system('osascript -e ''tell application "iTerm" to set frontmost of ' . a:active_window . ' to true''')
+    call system('osascript -e ''tell application "Terminal" to set frontmost of ' . a:active_window . ' to true''')
 endfunction
 
 
