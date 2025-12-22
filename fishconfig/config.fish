@@ -84,7 +84,6 @@ set PATH $PATH /Users/gordon/.local/bin
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
-alias claude="/Users/gordon/.claude/local/claude"
 
 # ASDF configuration
 if test -f /opt/homebrew/opt/asdf/libexec/asdf.fish
