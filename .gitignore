@@ -9,7 +9,6 @@ tokens/*
 **/*.swp
 
 vimconfig/test_json.json
-vimconfig/autoload/
 vimconfig/plugged/
 **/.DS_Store
 
