@@ -40,14 +40,18 @@ set -x PAGER (which less)" -X -F"
 #set -x PATH (python3 -m site --user-base)/bin $PATH
 
 # Add pyenv to PATH
-set -gx PATH $HOME/.pyenv/bin $PATH
+if [ -d $HOME/.pyenv/bin ]
+  set -gx PATH $HOME/.pyenv/bin $PATH
 
-# Initialize pyenv (required)
-status --is-interactive; and pyenv init --path | source
-status --is-interactive; and pyenv init - | source
+  # Initialize pyenv (required)
+  status --is-interactive; and pyenv init --path | source
+  status --is-interactive; and pyenv init - | source
 
-# Initialize pyenv-virtualenv (optional)
-status --is-interactive; and pyenv virtualenv-init - | source
+  # Initialize pyenv-virtualenv (optional)
+  status --is-interactive; and pyenv virtualenv-init - | source
+end
+
+
 
 
 if [ -d $HOME/.cargo/bin ]
