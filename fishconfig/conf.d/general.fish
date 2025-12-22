@@ -18,9 +18,9 @@ if [ -d $HOME/bin ]
   set -x PATH $HOME/bin $PATH
 end
 
-if [ -d $HOME/.claude/local ]
-  set -x PATH $HOME/.claude/local $PATH
-end
+#if [ -d $HOME/.claude/local ]
+#  set -x PATH $HOME/.claude/local $PATH
+#end
 
 #if [ -d $HOME/src/emsdk ]
 #  set -x PATH $HOME/src/emsdk $HOME/src/emsdk/node/14.15.5_64bit/bin $HOME/src/emsdk/upstream/emscripten $PATH
@@ -38,6 +38,16 @@ end
 set -x PAGER (which less)" -X -F"
 
 #set -x PATH (python3 -m site --user-base)/bin $PATH
+
+# Add pyenv to PATH
+set -gx PATH $HOME/.pyenv/bin $PATH
+
+# Initialize pyenv (required)
+status --is-interactive; and pyenv init --path | source
+status --is-interactive; and pyenv init - | source
+
+# Initialize pyenv-virtualenv (optional)
+status --is-interactive; and pyenv virtualenv-init - | source
 
 
 if [ -d $HOME/.cargo/bin ]
@@ -211,6 +221,8 @@ set -l which_nvm_exit_code $status
 if [ $which_nvm_exit_code = 0 ]
   load_nvm
 end
+
+alias gd "git diff"
 
 #set fish_vi_force_cursor 1
 fish_vi_key_bindings

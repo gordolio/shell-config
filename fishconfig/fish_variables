@@ -8,8 +8,10 @@ SETUVAR FZF_LEGACY_KEYBINDINGS:1
 SETUVAR FZF_PREVIEW_DIR_CMD:ls
 SETUVAR FZF_PREVIEW_FILE_CMD:head\x20\x2dn\x2010
 SETUVAR FZF_TMUX_HEIGHT:40\x25
+SETUVAR --export --path PKG_CONFIG_PATH:\x1d
 SETUVAR --export PYENV_ROOT:/Users/gordon/\x2epyenv
 SETUVAR PYTHON:/Users/gordon/\x2epyenv/versions/2\x2e7\x2e18/bin/python
+SETUVAR --export RUBY_CONFIGURE_OPTS:\x2d\x2dwith\x2dopenssl\x2ddir\x3d/opt/homebrew/opt/openssl\x403\x20\x2d\x2dwith\x2dreadline\x2ddir\x3d/opt/homebrew/opt/readline\x20\x2d\x2dwith\x2dlibyaml\x2ddir\x3d/opt/homebrew/opt/libyaml\x20\x2d\x2dwith\x2dgmp\x2ddir\x3d/opt/homebrew/opt/gmp\x20\x2d\x2denable\x2dshared
 SETUVAR ZO_CMD:zo
 SETUVAR Z_CMD:z
 SETUVAR Z_DATA:/Users/gordon/\x2elocal/share/z/data
@@ -62,6 +64,6 @@ SETUVAR fish_pager_color_prefix:white\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
 SETUVAR fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
 SETUVAR fish_pager_color_selected_background:\x2dr
 SETUVAR fish_prompt_pwd_dir_length:0
-SETUVAR fish_user_paths:/opt/homebrew/opt/mysql\x2dclient\x408\x2e0/bin\x1e/opt/homebrew/opt/node\x4020/bin\x1e/opt/homebrew/opt/mysql\x405\x2e7/bin\x1e/opt/homebrew/opt/mysql\x2dclient\x405\x2e7/bin\x1e/opt/homebrew/opt/ruby\x403\x2e1/bin\x1e/Users/gordon/src/chromium/depot_tools\x1e/opt/homebrew/opt/php\x408\x2e0/sbin\x1e/opt/homebrew/opt/php\x408\x2e0/bin\x1e/opt/homebrew/opt/binutils/bin\x1e/Users/gordon/\x2epyenv/bin\x1e/opt/homebrew/opt/php\x407\x2e4/sbin\x1e/opt/homebrew/opt/php\x407\x2e4/bin\x1e/Users/gordon/\x2econfig/nvm/12\x2e20\x2e1/bin\x1e/opt/homebrew/opt/fzf/bin
+SETUVAR fish_user_paths:/opt/homebrew/opt/libpq/bin\x1e/opt/homebrew/opt/node\x4022/bin\x1e/opt/homebrew/opt/mysql\x2dclient\x408\x2e0/bin\x1e/opt/homebrew/opt/node\x4020/bin\x1e/opt/homebrew/opt/mysql\x405\x2e7/bin\x1e/opt/homebrew/opt/mysql\x2dclient\x405\x2e7/bin\x1e/opt/homebrew/opt/ruby\x403\x2e1/bin\x1e/Users/gordon/src/chromium/depot_tools\x1e/opt/homebrew/opt/php\x408\x2e0/sbin\x1e/opt/homebrew/opt/php\x408\x2e0/bin\x1e/opt/homebrew/opt/binutils/bin\x1e/Users/gordon/\x2epyenv/bin\x1e/opt/homebrew/opt/php\x407\x2e4/sbin\x1e/opt/homebrew/opt/php\x407\x2e4/bin\x1e/Users/gordon/\x2econfig/nvm/12\x2e20\x2e1/bin\x1e/opt/homebrew/opt/fzf/bin
 SETUVAR nvm_data:/Users/gordon/\x2elocal/share/nvm
 SETUVAR nvm_mirror:https\x3a//nodejs\x2eorg/dist

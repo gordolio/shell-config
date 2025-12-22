@@ -1,11 +1,16 @@
 **/*.*~
 
+.idea/
+
 tokens/*
 !tokens/.gitkeep
+
 
 **/*.swp
 
 vimconfig/test_json.json
+vimconfig/autoload/
+vimconfig/plugged/
 **/.DS_Store
 
 vimconfig/bundle/*

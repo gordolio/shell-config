@@ -28,7 +28,17 @@ function _nvm_auto_use --on-event fish_prompt
         return
     end
 
-    if test -f .nvmrc
+    # Check for .tool-versions first (asdf)
+    if test -f .tool-versions
+        set -l node_version (grep '^nodejs ' .tool-versions | awk '{print $2}')
+        if test -n "$node_version"
+            set -l current_version (node --version 2>/dev/null | string replace -r '^v' '')
+            if test "$node_version" != "$current_version"
+                echo "Switching Node from '$current_version' to '$node_version' from .tool-versions (asdf)"
+                asdf shell nodejs $node_version
+            end
+        end
+    else if test -f .nvmrc
       #echo "detected .nvmrc file, checking Node version..."
         set nvm_version (string trim < .nvmrc | string replace -r '^v' '')
         set current_version (nvm current | string replace -r '^v' '')

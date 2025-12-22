@@ -1,29 +1,33 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json
 
+version: 3
+final_space: true
 console_title_template: "{{ .Shell }} in {{ .Folder }}"
+async: true
 blocks:
 - type: prompt
   alignment: left
   segments:
-  - leading_diamond: 
-    trailing_diamond: 
-    template: " {{ .UserName }} "
-    foreground: "#ffffff"
-    background: "#c386f1"
-    type: session
-    style: diamond
+#  - leading_diamond: 
+#    trailing_diamond: 
+#    template: " {{ .UserName }} "
+#    foreground: "#ffffff"
+#    background: "#c386f1"
+#    type: session
+#    style: diamond
   - properties:
       folder_separator_icon: " \ue0b1 "
       home_icon: null
       style: folder
+    leading_diamond: 
+    trailing_diamond: 
     template: " \U000f024b {{ .Path }} "
     foreground: "#ffffff"
-    powerline_symbol: 
-    background: "#ff479c"
+    background: "#c386f1"
+#    background: "#ff479c"
     type: path
-    style: powerline
+    style: diamond
   - properties:
-      branch_max_length: 25
       fetch_stash_count: true
       fetch_status: true
       fetch_upstream_icon: true
@@ -94,8 +98,10 @@ blocks:
   - properties:
       display_default: false
     template: " \ue7ad {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} "
+    #template: " ☁️ {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} "
     foreground: "#ffffff"
     powerline_symbol: 
+    #powerline_symbol:
     type: aws
     style: powerline
     background_templates:
@@ -124,6 +130,16 @@ blocks:
     style: diamond
     background_templates:
     - "{{ if gt .Code 0 }}#e91e63{{ end }}"
+- type: prompt
+  alignment: left
+  newline: true
+  segments:
+  - template: "❯ "
+    foreground: "#00897b"
+    foreground_templates:
+    - "{{ if gt .Code 0 }}#e91e63{{ end }}"
+    type: text
+    style: plain
 - type: rprompt
   segments:
   - template: "<#0077c2,transparent>\ue0b6</> \uf489 {{ .Name | toString }} <transparent,#0077c2>\ue0b2</>"
@@ -154,5 +170,13 @@ blocks:
     type: time
     style: diamond
     invert_powerline: true
-version: 3
-final_space: true
+transient_prompt:
+  template: "❯ "
+  foreground: "#00897b"
+  foreground_templates:
+    - "{{ if gt .Code 0 }}#e91e63{{ end }}"
+
+transient_rprompt:
+  template: "⏱ {{ .FormattedMs }}  📅 {{ .CurrentDate | date \"2006-01-02 15:04:05\" }}"
+  foreground: "#83769c"
+  background: transparent

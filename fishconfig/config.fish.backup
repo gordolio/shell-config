@@ -19,12 +19,11 @@ if type -q (brew --prefix)/bin/pyenv
 end
 
 # Add Conda initialization
-# Disabled - not needed for prompt, conda still available via PATH if needed
-#if test -d ~/miniconda3/etc/fish/conf.d
-#  for file in ~/miniconda3/etc/fish/conf.d/*.fish
-#    source $file
-#  end
-#end
+if test -d ~/miniconda3/etc/fish/conf.d
+  for file in ~/miniconda3/etc/fish/conf.d/*.fish
+    source $file
+  end
+end
 
 # Set Android SDK environment variables
 set -q ANDROID_HOME; or set -x ANDROID_HOME $HOME/Library/Android/sdk
@@ -85,11 +84,3 @@ set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
 alias claude="/Users/gordon/.claude/local/claude"
-
-# ASDF configuration
-if test -f /opt/homebrew/opt/asdf/libexec/asdf.fish
-  source /opt/homebrew/opt/asdf/libexec/asdf.fish
-end
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/opt/homebrew/share/google-cloud-sdk/path.fish.inc' ]; . '/opt/homebrew/share/google-cloud-sdk/path.fish.inc'; end

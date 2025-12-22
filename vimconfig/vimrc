@@ -78,6 +78,7 @@ endfunction
 
 
 au BufRead,BufNewFile *.json set filetype=json foldmethod=syntax
+au BufRead,BufNewFile *.jsonl set filetype=jsonl
 "au! Syntax spin source $HOME/.vim/syntax/json.vim
 au BufRead,BufNewFile *.tt set filetype=tt2html
 au BufRead,BufNewFile *.t set filetype=tt2html
@@ -114,6 +115,7 @@ endif
 
 au FileType perl command! -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
 au FileType json command! -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
+au FileType jsonl command! -range=% -nargs=* Tidy call JsonlTidy(<line1>,<line2>)
 au FileType yaml command! -range=% -nargs=* Tidy call YamlTidy(<line1>,<line2>)
 au FileType xml command! -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
 
@@ -147,6 +149,42 @@ function JsonTidy(line1,line2)
   call system("rm ".tempfile)
 endfunction
 
+function JsonlTidy(line1,line2)
+  let lines = getline(a:line1, a:line2)
+  let output = []
+
+  for line in lines
+    " Skip empty lines
+    if line =~ '^\s*$'
+      continue
+    endif
+
+    " Format each JSON line
+    let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
+    call writefile([line],tempfile)
+    let formatted = system("cat ".tempfile." | node ~/.vim/json_tidy.js")
+    call system("rm ".tempfile)
+
+    " Remove trailing newline from formatted output
+    let formatted = substitute(formatted, '\n$', '', '')
+
+    " Add the formatted JSON to output
+    let output += split(formatted, '\n')
+
+    " Add blank line separator
+    call add(output, '')
+  endfor
+
+  " Remove the final blank line if it exists
+  if len(output) > 0 && output[-1] == ''
+    call remove(output, -1)
+  endif
+
+  " Replace the range with formatted output
+  execute a:line1.",".a:line2."delete"
+  call append(a:line1 - 1, output)
+endfunction
+
 function YamlTidy(line1,line2)
   let text = join(getline(a:line1, a:line2),'')
   " let text = substitute(text,"'\([^']*\)'",'"\1"','g')
@@ -172,6 +210,81 @@ map Q :q
 "colorscheme morning
 set laststatus=2
 
+" JSON path function for statusline
+function! GetJsonPath()
+  if &filetype != 'json'
+    return ''
+  endif
+  
+  let line = getline('.')
+  let col = col('.')
+  let lnum = line('.')
+  
+  " Find all opening braces/brackets before current position
+  let path = []
+  let brace_stack = []
+  let in_string = 0
+  let in_key = 0
+  let current_key = ''
+  
+  " Go through each line from start to current position
+  for l in range(1, lnum)
+    let text = getline(l)
+    if l == lnum
+      let text = strpart(text, 0, col - 1)
+    endif
+    
+    let i = 0
+    while i < len(text)
+      let char = text[i]
+      
+      " Handle string detection
+      if char == '"' && (i == 0 || text[i-1] != '\')
+        let in_string = !in_string
+        if in_string
+          let current_key = ''
+          let in_key = 1
+        elseif in_key
+          let in_key = 0
+        endif
+      elseif in_string && in_key
+        let current_key .= char
+      elseif !in_string
+        if char == '{'
+          call add(brace_stack, {'type': 'object', 'key': ''})
+        elseif char == '['
+          call add(brace_stack, {'type': 'array', 'index': -1})
+        elseif char == ':'
+          if len(brace_stack) > 0 && brace_stack[-1]['type'] == 'object'
+            let brace_stack[-1]['key'] = current_key
+          endif
+        elseif char == ',' || char == '}'
+          if len(brace_stack) > 0 && brace_stack[-1]['type'] == 'array'
+            let brace_stack[-1]['index'] += 1
+          endif
+        elseif char == '}' || char == ']'
+          if len(brace_stack) > 0
+            call remove(brace_stack, -1)
+          endif
+        endif
+      endif
+      let i += 1
+    endwhile
+  endfor
+  
+  " Build path string
+  let path_parts = []
+  for item in brace_stack
+    if item['type'] == 'object' && item['key'] != ''
+      call add(path_parts, item['key'])
+    elseif item['type'] == 'array'
+      call add(path_parts, '[' . max([0, item['index']]) . ']')
+    endif
+  endfor
+  
+  return len(path_parts) > 0 ? '.' . join(path_parts, '.') : ''
+endfunction
+
 function! HLNext (blinktime)
   let [bufnum, lnum, col, off] = getpos('.')
   let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
@@ -190,32 +303,35 @@ endfunction
 
 filetype off
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+" Use vim-plug instead of Vundle
+call plug#begin('~/.vim/plugged')
 
-" let Vundle manage Vundle
-" required!
-Plugin 'VundleVim/Vundle.vim'
+" Plugins
+Plug 'dracula/vim'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 
-" My Bundles here:
-"
-" original repos on github
-Plugin 'dracula/vim'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'jparise/vim-graphql'
+" GraphQL syntax highlighting
+Plug 'jparise/vim-graphql'
 
-Plugin 'chr4/nginx'
-Plugin 'dag/vim-fish'
-Plugin 'udalov/kotlin-vim'
+" Language and config file syntax
+Plug 'chr4/nginx'
+Plug 'dag/vim-fish'
+Plug 'udalov/kotlin-vim'
 
-Plugin 'L9'
-Plugin 'FuzzyFinder'
-Plugin 'elzr/vim-json'
+" Old plugins (L9, FuzzyFinder) - keep only if you really use them
+Plug 'vim-scripts/L9'
+Plug 'vim-scripts/FuzzyFinder'
 
-Plugin 'github/copilot.vim'
+" JSON highlighting
+Plug 'elzr/vim-json'
 
-call vundle#end()
+" GitHub Copilot
+Plug 'github/copilot.vim'
+
+call plug#end()
+
+
 filetype plugin indent on
 
 if has("gui_vimr")
