@@ -18,6 +18,10 @@ if type -q (brew --prefix)/bin/pyenv
   pyenv init - | source
 end
 
+if status --is-interactive; and command -q rbenv
+    rbenv init - fish | source
+end
+
 # Add Conda initialization
 # Disabled - not needed for prompt, conda still available via PATH if needed
 #if test -d ~/miniconda3/etc/fish/conf.d
@@ -83,6 +87,10 @@ set PATH $PATH /Users/gordon/.local/bin
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+if status --is-interactive
+  set -gx GPG_TTY (tty)
+end
 
 
 # ASDF configuration
