@@ -75,10 +75,6 @@ end
 
 set -x TTY (tty)
 
-if [ -f $HOME/src/shell-config/tokens/github_token.txt ]
-   set -x HOMEBREW_GITHUB_API_TOKEN (cat $HOME/src/shell-config/tokens/github_token.txt)
-end
-
 #set -x RUBY_CONFIGURE_OPTS --with-open
 
 # BEGIN
@@ -87,11 +83,13 @@ if test -f $HOME/perl5/perlbrew/etc/perlbrew.fish
    #perlbrew switch perl-5.34.0
 end
 
-set -x PATH "$HOME/perl5/bin" $PATH
-set -x PERL5LIB "$HOME/perl5/lib/perl5" $PERL5LIB
-set -x PERL_LOCAL_LIB_ROOT "$HOME/perl5" $PERL_LOCAL_LIB_ROOT
-set -x PERL_MB_OPT "--install_base \"$HOME/perl5\""
-set -x PERL_MM_OPT "INSTALL_BASE=$HOME/perl5"
+if test -d $HOME/perl5
+  set -x PATH "$HOME/perl5/bin" $PATH
+  set -x PERL5LIB "$HOME/perl5/lib/perl5" $PERL5LIB
+  set -x PERL_LOCAL_LIB_ROOT "$HOME/perl5" $PERL_LOCAL_LIB_ROOT
+  set -x PERL_MB_OPT "--install_base \"$HOME/perl5\""
+  set -x PERL_MM_OPT "INSTALL_BASE=$HOME/perl5"
+end
 # END
 
 which cygpath 2>&1 > /dev/null
