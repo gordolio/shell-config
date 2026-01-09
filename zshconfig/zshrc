@@ -91,9 +91,8 @@ alias which='nocorrect type -a'
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-which gtar 2>&1 > /dev/null
-if [[ $? = 0 ]]; then
-   alias tar=`which gtar`
+if [[ -f /opt/homebrew/bin/gtar ]]; then
+   alias tar=/opt/homebrew/bin/gtar
 fi
 
 #export LDFLAGS="$LDFLAGS -L/usr/local/opt/libxml2/lib"
@@ -115,9 +114,6 @@ export SDKMAN_DIR="$HOME/.sdkman"
 
 # heroku autocomplete setup
 HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
-
-
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

@@ -52,9 +52,6 @@
   difftool-all = difftool --tool=bc3 --dir-diff --no-symlinks
   diff-ignore-commas = "!f() { git diff --no-index --word-diff \"$1\" <(sed 's/,$//' \"$2\") <(sed 's/,$//' \"$3\"); }; f"
 
-
-
-
 [core]
   precomposeUnicode = true
   # use delta for better diffs

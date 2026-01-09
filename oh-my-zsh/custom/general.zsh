@@ -122,10 +122,6 @@ else
    export EDITOR="vim"
 fi
 
-if [ -f $HOME/.sdkman/bin/sdkman-init.sh ]; then
-   source $HOME/.sdkman/bin/sdkman-init.sh
-fi
-
 which rbenv 2>&1 > /dev/null
 if [ $? = 0 ]; then
    eval "$(rbenv init -)"

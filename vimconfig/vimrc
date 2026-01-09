@@ -329,8 +329,113 @@ Plug 'elzr/vim-json'
 " GitHub Copilot
 Plug 'github/copilot.vim'
 
+" File navigation
+Plug 'preservim/nerdtree'
+Plug 'junegunn/fzf.vim'
+
+" Editing enhancements
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-commentary'
+
+" Git integration
+Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+
 call plug#end()
 
+" ============================================================================
+" Plugin Configurations
+" ============================================================================
+
+" GitHub Copilot - use Homebrew node instead of asdf
+let g:copilot_node_command = "/opt/homebrew/bin/node"
+
+" NERDTree
+nnoremap <leader>n :NERDTreeToggle<CR>
+nnoremap <leader>f :NERDTreeFind<CR>
+let NERDTreeShowHidden=1
+let NERDTreeIgnore=['\.git$', '\.DS_Store$']
+let g:NERDTreeWinSize=35
+
+" Preferred editor window width
+let g:editor_width=100
+
+" Helper function to echo debug messages to terminal
+function TtyEcho(msg)
+  call writefile([a:msg], $TTY, 'a')
+endfunction
+
+" Auto-open NERDTree in git repositories
+function AutoNERDTree()
+  "call TtyEcho('[AutoNERDTree] Function called')
+  "call TtyEcho('[AutoNERDTree] argc()=' . argc())
+  "call TtyEcho('[AutoNERDTree] isdirectory(.git)=' . isdirectory('.git'))
+  "call TtyEcho('[AutoNERDTree] getcwd()=' . getcwd())
+
+  if argc() == 0 && isdirectory('.git')
+    "call TtyEcho('[AutoNERDTree] Opening NERDTree in git repo')
+    "call TtyEcho('[AutoNERDTree] Setting columns to ' . (g:editor_width + g:NERDTreeWinSize))
+    execute 'set columns=' . (g:editor_width + g:NERDTreeWinSize)
+    NERDTree
+    wincmd p
+  elseif argc() == 1 && isdirectory(argv()[0])
+    "call TtyEcho('[AutoNERDTree] Opening NERDTree for directory')
+    execute 'set columns=' . (g:editor_width + g:NERDTreeWinSize)
+    execute 'NERDTree' argv()[0]
+    wincmd p
+  else
+    "call TtyEcho('[AutoNERDTree] Not opening NERDTree, setting columns to ' . g:editor_width)
+    execute 'set columns=' . (g:editor_width)
+  endif
+
+  " Close vim if NERDTree is the only window left
+  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+
+  "call TtyEcho('[AutoNERDTree] Function complete, columns=' . &columns)
+
+  " Override MacVim's window size restoration when NERDTree is open
+  " Ignore all resizes for 500ms after opening (MacVim restoration + NERDTree adjustments)
+  " After that, allow manual resizes
+  if argc() == 0 && isdirectory('.git') || (argc() == 1 && isdirectory(argv()[0]))
+    let g:allow_manual_resize = 0
+    let target_cols = g:editor_width + g:NERDTreeWinSize
+
+    " After 2000ms, allow manual resizes (increased delay)
+    call timer_start(2000, {-> execute('let g:allow_manual_resize = 1') })
+    "call timer_start(2000, {-> TtyEcho('[Timer 2000ms] Manual resizing now allowed')})
+
+    "augroup FixColumnsAfterResize
+    "  autocmd!
+    "  autocmd VimResized * call TtyEcho('[VimResized] allow_manual=' . g:allow_manual_resize . ' editor_width=' . g:editor_width . ' NERDTreeWinSize=' . g:NERDTreeWinSize . ' target=' . target_cols . ' actual=' . &columns)
+    "  autocmd VimResized * if g:allow_manual_resize == 0 |
+            \ call TtyEcho('[VimResized] Fixing to ' . target_cols) |
+            \ execute 'set columns=' . target_cols |
+            \ else |
+            \ call TtyEcho('[VimResized] Allowing manual resize=' . &columns) |
+            \ endif
+    "augroup END
+  endif
+endfunction
+
+" fzf.vim
+nnoremap <C-p> :Files<CR>
+nnoremap <leader>b :Buffers<CR>
+nnoremap <leader>r :Rg<CR>
+nnoremap <leader>h :History<CR>
+" Use bat for preview window
+let g:fzf_preview_window = ['right:50%:hidden', 'ctrl-/']
+
+" vim-gitgutter
+set updatetime=100
+nnoremap <leader>gn :GitGutterNextHunk<CR>
+nnoremap <leader>gp :GitGutterPrevHunk<CR>
+nnoremap <leader>gs :GitGutterStageHunk<CR>
+nnoremap <leader>gu :GitGutterUndoHunk<CR>
+
+" vim-fugitive
+nnoremap <leader>gb :Git blame<CR>
+nnoremap <leader>gd :Gdiff<CR>
+nnoremap <leader>gl :Git log<CR>
 
 filetype plugin indent on
 
@@ -339,7 +444,6 @@ if has("gui_vimr")
   set bg=dark
   set guifont=
   set lines=40
-  set columns=100
   set nu
 
   color dracula
@@ -354,13 +458,14 @@ if has("gui_macvim")
   set guioptions+=T
 
   set lines=40
-  set columns=100
   set nu
   set guifont=JetBrainsMono\ Nerd\ Font:h14
 
   let g:html_use_css=1
 
   color dracula
+
+  autocmd VimEnter * call AutoNERDTree()
 
   "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$TTY)
 endif
@@ -371,9 +476,8 @@ if exists("g:neovide")
   set guioptions+=T
 
   set lines=40
-  set columns=100
   set nu
-  set guifont=JetBrainsMono\ Nerd\ Font:h14  
+  set guifont=JetBrainsMono\ Nerd\ Font:h14
 
   let g:html_use_css=1
 
