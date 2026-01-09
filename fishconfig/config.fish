@@ -18,6 +18,10 @@ if type -q (brew --prefix)/bin/pyenv
   pyenv init - | source
 end
 
+function sshkey
+    ssh-copy-id -i ~/.ssh/id_ed25519.pub $argv
+end
+
 # Add Conda initialization
 # Disabled - not needed for prompt, conda still available via PATH if needed
 #if test -d ~/miniconda3/etc/fish/conf.d

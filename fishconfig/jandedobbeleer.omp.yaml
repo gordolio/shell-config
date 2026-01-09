@@ -164,7 +164,7 @@ blocks:
     invert_powerline: true
   - leading_diamond: 
     trailing_diamond: 
-    template: " {{ .CurrentDate | date .Format }} "
+    template: " {{ .CurrentDate | date \"3:04 PM\" }} "
     foreground: "#111111"
     background: "#2e9599"
     type: time
@@ -177,6 +177,6 @@ transient_prompt:
     - "{{ if gt .Code 0 }}#e91e63{{ end }}"
 
 transient_rprompt:
-  template: "⏱ {{ .FormattedMs }}  📅 {{ .CurrentDate | date \"2006-01-02 15:04:05\" }}"
+  template: "⏱ {{ .FormattedMs }}  📅 {{ .CurrentDate | date \"2006-01-02 3:04:05 PM\" }}"
   foreground: "#83769c"
   background: transparent
