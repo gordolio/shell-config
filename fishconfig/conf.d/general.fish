@@ -79,7 +79,8 @@ set -x TTY (tty)
 
 # BEGIN
 if test -f $HOME/perl5/perlbrew/etc/perlbrew.fish
-   source ~/perl5/perlbrew/etc/perlbrew.fish
+   set -gx PERLBREW_ROOT $HOME/perl5/perlbrew
+   fish_add_path -g $PERLBREW_ROOT/bin
    #perlbrew switch perl-5.34.0
 end
 
