@@ -10,10 +10,6 @@ if type -q (brew --prefix)/bin/oh-my-posh
   oh-my-posh init fish --config ~/.config/fish/jandedobbeleer.omp.yaml | source
 end
 
-if test -e ~/perl5/perlbrew/etc/perlbrew.fish
-  . ~/perl5/perlbrew/etc/perlbrew.fish
-end
-
 if type -q (brew --prefix)/bin/pyenv
   pyenv init - | source
 end
