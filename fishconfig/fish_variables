@@ -36,5 +36,6 @@ SETUVAR _fisher_reitzig_2F_sdkman_2D_for_2D_fish_40_v1_2E_34_2E_30__files:\x7e/\
 SETUVAR _fisher_reitzig_2F_sdkman_2D_for_2D_fish_files:\x7e/\x2econfig/fish/functions/sdk\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/sdk\x2efish\x1e\x7e/\x2econfig/fish/completions/sdk\x2efish
 SETUVAR _fisher_upgraded_to_4_4:\x1d
 SETUVAR fish_greeting:Welcome\x20to\x20fish\x2c\x20the\x20friendly\x20interactive\x20shell
+SETUVAR fish_key_bindings:fish_default_key_bindings
 SETUVAR fish_prompt_pwd_dir_length:0
 SETUVAR fish_user_paths:/opt/homebrew/opt/libpq/bin\x1e/opt/homebrew/opt/node\x4022/bin\x1e/opt/homebrew/opt/mysql\x2dclient\x408\x2e0/bin\x1e/opt/homebrew/opt/node\x4020/bin\x1e/opt/homebrew/opt/mysql\x405\x2e7/bin\x1e/opt/homebrew/opt/mysql\x2dclient\x405\x2e7/bin\x1e/opt/homebrew/opt/ruby\x403\x2e1/bin\x1e/Users/gordon/src/chromium/depot_tools\x1e/opt/homebrew/opt/php\x408\x2e0/sbin\x1e/opt/homebrew/opt/php\x408\x2e0/bin\x1e/opt/homebrew/opt/binutils/bin\x1e/Users/gordon/\x2epyenv/bin\x1e/opt/homebrew/opt/php\x407\x2e4/sbin\x1e/opt/homebrew/opt/php\x407\x2e4/bin\x1e/Users/gordon/\x2econfig/nvm/12\x2e20\x2e1/bin\x1e/opt/homebrew/opt/fzf/bin
