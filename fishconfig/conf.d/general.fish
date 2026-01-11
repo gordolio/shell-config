@@ -3,20 +3,11 @@
 #depot_tools is now in src/chromium/depot_tools
 #set -x PATH $HOME/src/v8-build/depot_tools $PATH
 
-if [ -d /usr/local/bin ]
-  set -x PATH /usr/local/bin $PATH
-end
-if [ -d /usr/local/sbin ]
-  set -x PATH /usr/local/sbin $PATH
-end
-
-if [ -d /opt/homebrew ]
-  set -x PATH /opt/homebrew/bin /opt/homebrew/sbin $PATH
-end
-
-if [ -d $HOME/bin ]
-  set -x PATH $HOME/bin $PATH
-end
+__tool_add_path "usr-local-bin" "/usr/local/bin" path prepend
+__tool_add_path "usr-local-sbin" "/usr/local/sbin" path prepend
+__tool_add_path "homebrew-bin" "/opt/homebrew/bin" path prepend
+__tool_add_path "homebrew-sbin" "/opt/homebrew/sbin" path prepend
+__tool_add_path "home-bin" "$HOME/bin" path prepend
 
 #if [ -d $HOME/.claude/local ]
 #  set -x PATH $HOME/.claude/local $PATH
@@ -27,12 +18,10 @@ end
 #end
 
 
-if test -d (brew --prefix)"/share/fish/completions"
-    set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/completions
-end
-
-if test -d (brew --prefix)"/share/fish/vendor_completions.d"
-    set -gx fish_complete_path $fish_complete_path (brew --prefix)/share/fish/vendor_completions.d
+if type -q brew
+  set -l brew_prefix (brew --prefix)
+  __tool_add_fish_complete_path "homebrew-completions" "$brew_prefix/share/fish/completions" completion
+  __tool_add_fish_complete_path "homebrew-vendor-completions" "$brew_prefix/share/fish/vendor_completions.d" completion
 end
 
 set -x PAGER (which less)" -X -F"
@@ -40,9 +29,7 @@ set -x PAGER (which less)" -X -F"
 #set -x PATH (python3 -m site --user-base)/bin $PATH
 
 # Add pyenv to PATH
-if [ -d $HOME/.pyenv/bin ]
-  set -gx PATH $HOME/.pyenv/bin $PATH
-
+if __tool_add_path "pyenv-bin" "$HOME/.pyenv/bin" path prepend
   # Initialize pyenv (required)
   status --is-interactive; and pyenv init --path | source
   status --is-interactive; and pyenv init - | source
@@ -54,38 +41,26 @@ end
 
 
 
-if [ -d $HOME/.cargo/bin ]
-  set -x PATH $PATH $HOME/.cargo/bin
+__tool_add_path "cargo-bin" "$HOME/.cargo/bin" path append
+if __tool_add_path "mysql-homebrew" "/opt/homebrew/mysql/bin" path append
+else if __tool_add_path "mysql-local" "/usr/local/mysql/bin" path append
 end
-if [ -d /opt/homebrew/mysql/bin ]
-  set -x PATH $PATH /opt/homebrew/mysql/bin
-else if [ -d /usr/local/mysql/bin ]
-  set -x PATH $PATH /usr/local/mysql/bin
-end
-if [ -d $HOME/apps/git-credential-manager ]
-   set -x PATH $PATH $HOME/apps/git-credential-manager
-end
-if [ -d $HOME/apps/maven/bin ]
-   set -x PATH $PATH $HOME/apps/maven/bin
-end
-
-if [ -d $HOME/Library/Android/sdk/platform-tools ]
-   set -x PATH $PATH $HOME/Library/Android/sdk/platform-tools
-end
+__tool_add_path "git-credential-manager" "$HOME/apps/git-credential-manager" path append
+__tool_add_path "maven-bin" "$HOME/apps/maven/bin" path append
 
 set -x TTY (tty)
 
 #set -x RUBY_CONFIGURE_OPTS --with-open
 
 # BEGIN
-if test -f $HOME/perl5/perlbrew/etc/perlbrew.fish
+if __tool_check_path "perlbrew-init" "$HOME/perl5/perlbrew/etc/perlbrew.fish" integration file
    set -gx PERLBREW_ROOT $HOME/perl5/perlbrew
-   fish_add_path -g $PERLBREW_ROOT/bin
+   __tool_add_path "perlbrew-bin" "$PERLBREW_ROOT/bin" path prepend
    #perlbrew switch perl-5.34.0
 end
 
-if test -d $HOME/perl5
-  set -x PATH "$HOME/perl5/bin" $PATH
+if __tool_check_path "perl5-home" "$HOME/perl5" integration dir
+  __tool_add_path "perl5-bin" "$HOME/perl5/bin" path prepend
   set -x PERL5LIB "$HOME/perl5/lib/perl5" $PERL5LIB
   set -x PERL_LOCAL_LIB_ROOT "$HOME/perl5" $PERL_LOCAL_LIB_ROOT
   set -x PERL_MB_OPT "--install_base \"$HOME/perl5\""

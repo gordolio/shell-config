@@ -2,19 +2,23 @@
 
 alias ip 'curl ipinfo.io/ip'
 
-if type -q (brew --prefix)/bin/screenfetch
-  alias screenfetch=(brew --prefix)"/bin/screenfetch -D 'Mac OS X'"
+if type -q brew
+  set -l brew_prefix (brew --prefix)
+
+  if __tool_check_cmd "screenfetch" "$brew_prefix/bin/screenfetch" tool
+    alias screenfetch="$brew_prefix/bin/screenfetch -D 'Mac OS X'"
+  end
+
+  if __tool_check_cmd "oh-my-posh" "$brew_prefix/bin/oh-my-posh" tool
+    oh-my-posh init fish --config ~/.config/fish/jandedobbeleer.omp.yaml | source
+  end
+
+  if __tool_check_cmd "pyenv" "$brew_prefix/bin/pyenv" tool
+    pyenv init - | source
+  end
 end
 
-if type -q (brew --prefix)/bin/oh-my-posh
-  oh-my-posh init fish --config ~/.config/fish/jandedobbeleer.omp.yaml | source
-end
-
-if type -q (brew --prefix)/bin/pyenv
-  pyenv init - | source
-end
-
-if status --is-interactive; and command -q rbenv
+if status --is-interactive; and __tool_check_cmd "rbenv" rbenv tool
     rbenv init - fish | source
 end
 
@@ -34,21 +38,12 @@ end
 # Set Android SDK environment variables
 set -q ANDROID_HOME; or set -x ANDROID_HOME $HOME/Library/Android/sdk
 
-if test -d $ANDROID_HOME/emulator
-  if not contains $ANDROID_HOME/emulator $PATH
-    set -x PATH $PATH $ANDROID_HOME/emulator
-  end
-end
-
-if test -d $ANDROID_HOME/platform-tools
-  if not contains $ANDROID_HOME/platform-tools $PATH
-    set -x PATH $PATH $ANDROID_HOME/platform-tools
-  end
-end
+__tool_add_path "android-emulator" "$ANDROID_HOME/emulator" path append
+__tool_add_path "android-platform-tools" "$ANDROID_HOME/platform-tools" path append
 
 set -q ANDROID_STUDIO_HOME; or set -x ANDROID_STUDIO_HOME "$HOME/Applications/Android Studio.app"
 
-set -x PATH $ANDROID_STUDIO_HOME/Contents/bin $PATH
+__tool_add_path "android-studio-bin" "$ANDROID_STUDIO_HOME/Contents/bin" path prepend
 
 function delete_word_or_path
   set -l buffer (commandline -b)
@@ -83,11 +78,11 @@ set -Ux CLOUDSDK_GSUTIL_PYTHON /opt/homebrew/opt/python@3.11/bin/python3.11
 
 
 # Created by `pipx` on 2024-12-09 16:17:37
-set PATH $PATH /Users/gordon/.local/bin
+__tool_add_path "pipx-bin" "$HOME/.local/bin" path append
 
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
-set --export PATH $BUN_INSTALL/bin $PATH
+__tool_add_path "bun-bin" "$BUN_INSTALL/bin" path prepend
 
 if status --is-interactive
   set -gx GPG_TTY (tty)
@@ -95,9 +90,10 @@ end
 
 
 # ASDF configuration
-if test -f /opt/homebrew/opt/asdf/libexec/asdf.fish
-  source /opt/homebrew/opt/asdf/libexec/asdf.fish
-end
+__tool_source "asdf" "/opt/homebrew/opt/asdf/libexec/asdf.fish" integration
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/opt/homebrew/share/google-cloud-sdk/path.fish.inc' ]; . '/opt/homebrew/share/google-cloud-sdk/path.fish.inc'; end
+__tool_source "google-cloud-sdk" "/opt/homebrew/share/google-cloud-sdk/path.fish.inc" integration
+
+# opencode
+__tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
