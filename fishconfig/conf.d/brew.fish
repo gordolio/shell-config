@@ -102,6 +102,6 @@ function bugi --description "Upgrade selected outdated formulae/casks with fzf"
     end
   end
 
-  test (count $formulas) -gt 0; and brew upgrade $formulas
-  test (count $casks) -gt 0; and brew upgrade --cask $casks
+  test (count $formulas) -gt 0; and command brew upgrade $formulas
+  test (count $casks) -gt 0; and command brew upgrade --cask $casks
 end
