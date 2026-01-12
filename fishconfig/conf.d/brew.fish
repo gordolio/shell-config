@@ -7,7 +7,7 @@ end
 
 # Brew aliases
 alias b "brew"
-alias bud "brew update"
+alias bud "command brew update"
 
 function bs
   command brew search $argv
