@@ -109,8 +109,10 @@ end
 if __tool_check_cmd "pyenv" pyenv lang-managers
   status --is-interactive; and pyenv init --path | source
   status --is-interactive; and pyenv init - | source
-  # pyenv-virtualenv (optional)
-  status --is-interactive; and pyenv virtualenv-init - | source
+  # pyenv-virtualenv (optional - only if plugin is installed)
+  if contains virtualenv-init (pyenv commands 2>/dev/null)
+    status --is-interactive; and pyenv virtualenv-init - | source
+  end
 end
 
 # nvm is initialized by its own conf.d/nvm.fish, just record for ls-tools
