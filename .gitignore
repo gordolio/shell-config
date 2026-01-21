@@ -13,3 +13,7 @@ vimconfig/plugged/
 **/.DS_Store
 
 vimconfig/bundle/*
+
+# Local/work-specific fish configs (not tracked)
+fishconfig/conf.d/local.fish
+fishconfig/conf.d/*-local.fish
