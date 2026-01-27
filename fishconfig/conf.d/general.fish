@@ -106,12 +106,17 @@ else
 end
 
 # pyenv initialization
+# Skip if lock file exists (stale lock causes 60s hang on slow/no network)
 if __tool_check_cmd "pyenv" pyenv lang-managers
-  status --is-interactive; and pyenv init --path | source
-  status --is-interactive; and pyenv init - | source
-  # pyenv-virtualenv (optional - only if plugin is installed)
-  if contains virtualenv-init (pyenv commands 2>/dev/null)
-    status --is-interactive; and pyenv virtualenv-init - | source
+  if test -f "$HOME/.pyenv/shims/.pyenv-shim"
+    echo "pyenv: skipping init (stale lock file exists). Run: rm ~/.pyenv/shims/.pyenv-shim" >&2
+  else
+    status --is-interactive; and pyenv init --path | source
+    status --is-interactive; and pyenv init - | source
+    # pyenv-virtualenv (optional - only if plugin is installed)
+    if contains virtualenv-init (pyenv commands 2>/dev/null)
+      status --is-interactive; and pyenv virtualenv-init - | source
+    end
   end
 end
 
