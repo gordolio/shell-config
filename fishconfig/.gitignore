@@ -1,0 +1,6 @@
+# Fisher-managed directories
+# Only fish_plugins (list of plugins) and personal.d/ are tracked
+conf.d/*
+!conf.d/zz-personal.fish
+functions/*
+completions/*
