@@ -1,7 +1,5 @@
 # ~/.config/fish/config.fish
 
-alias ip 'curl ipinfo.io/ip'
-
 if type -q brew
   set -l brew_prefix (brew --prefix)
 
