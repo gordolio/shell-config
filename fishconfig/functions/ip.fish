@@ -1,10 +1,24 @@
 function ip --description "Show public and/or private IP addresses"
-    argparse 'p/public' 'l/private' -- $argv
+    argparse 'h/help' 'p/public' 'l/private' -- $argv
     or return 1
+
+    if set -q _flag_help
+        echo "Usage: ip [OPTIONS]"
+        echo ""
+        echo "Show public and/or private IP addresses."
+        echo ""
+        echo "Options:"
+        echo "  -p, --public   Show only public IP"
+        echo "  -l, --private  Show only private IP"
+        echo "  -h, --help     Show this help message"
+        echo ""
+        echo "With no options, displays both public and private IPs."
+        return 0
+    end
 
     # Just public IP
     if set -q _flag_public
-        curl -s ipinfo.io/ip
+        echo (curl -s ipinfo.io/ip)
         return
     end
 
