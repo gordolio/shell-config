@@ -14,6 +14,12 @@
 [includeIf "gitdir:~/src/later/"]
   path = ~/src/later/.gitconfig
 
+[includeIf "gitdir:~/src/loop/Loop/"]
+  path = ~/src/loop/Loop/.gitconfig
+
+[includeIf "gitdir:~/src/trio/"]
+  path = ~/src/trio/.gitconfig
+
 [diff]
   tool = bc3
   #tool = idea
