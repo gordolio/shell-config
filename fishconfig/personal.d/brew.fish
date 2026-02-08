@@ -39,6 +39,13 @@ function brew
     set suggest_msg "'bi'"
   end
 
+  # Show suggestion before command runs
+  if test -n "$suggest_msg"
+    set_color --bold --italics --underline --background brwhite brred
+    echo "Tip: You can use $suggest_msg instead"
+    set_color normal
+  end
+
   # Run the actual brew command
   command brew $argv
 
