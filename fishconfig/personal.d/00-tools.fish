@@ -171,6 +171,7 @@ function __check_setup_symlinks
   __tool_check_symlink ".gitconfig" "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" $category
   __tool_check_symlink ".config/fish" "$HOME/.config/fish" "$shell_config/fishconfig" $category
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" $category
+  __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" $category
 end
 
 function __fix_symlink
@@ -222,6 +223,7 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" ".gitconfig"
   __fix_symlink "$HOME/.config/fish" "$shell_config/fishconfig" ".config/fish"
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
+  __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
 
   echo ""
   echo "Done. Refreshing symlink status..."
@@ -308,4 +310,9 @@ function ls-tools
 
     echo ""
   end
+
+  set_color --bold
+  echo -n "Update shell plugins with: "
+  set_color normal
+  echo "fisher update"
 end
