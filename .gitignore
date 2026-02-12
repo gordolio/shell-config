@@ -14,6 +14,7 @@ vimconfig/plugged/
 
 vimconfig/bundle/*
 
-# Local/work-specific fish configs (not tracked)
+# Local/work-specific configs (not tracked)
 fishconfig/conf.d/local.fish
 fishconfig/conf.d/*-local.fish
+fishconfig/personal.d/local.fish

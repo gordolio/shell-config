@@ -8,7 +8,7 @@ if type -q brew
   end
 
   if __tool_check_cmd "oh-my-posh" "$brew_prefix/bin/oh-my-posh" tool
-    oh-my-posh init fish --config ~/.config/fish/jandedobbeleer.omp.yaml | source
+    oh-my-posh init fish --config ~/.config/oh-my-posh/jandedobbeleer.omp.yaml | source
   end
 
   if __tool_check_cmd "pyenv" "$brew_prefix/bin/pyenv" tool
