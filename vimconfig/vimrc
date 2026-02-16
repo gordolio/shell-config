@@ -305,6 +305,7 @@ filetype off
 
 " Use vim-plug instead of Vundle
 call plug#begin('~/.vim/plugged')
+" Install plugins using :PlugInstall command in vim after adding them here
 
 " Plugins
 Plug 'dracula/vim'
@@ -322,6 +323,9 @@ Plug 'udalov/kotlin-vim'
 " Old plugins (L9, FuzzyFinder) - keep only if you really use them
 Plug 'vim-scripts/L9'
 Plug 'vim-scripts/FuzzyFinder'
+
+" Language Server Protocol support
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " JSON highlighting
 Plug 'elzr/vim-json'
@@ -473,10 +477,12 @@ endif
 if exists("g:neovide")
   " Neovide specific stuff
   set bg=dark
-  set guioptions+=T
 
   set lines=40
+  autocmd VimEnter * set columns=100
   set nu
+  set nofoldenable
+  let g:vim_json_syntax_conceal = 0
   set guifont=JetBrainsMono\ Nerd\ Font:h14
 
   let g:html_use_css=1
