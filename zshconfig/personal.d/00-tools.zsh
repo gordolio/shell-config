@@ -204,6 +204,13 @@ function __fix_setup_symlinks {
 # Run symlink checks at startup
 __check_setup_symlinks
 
+# Check plugin manager
+if (( $+commands[zinit] )) || (( $+functions[zinit] )); then
+  __tool_record "zinit" "plugin-managers" loaded "zinit" ""
+else
+  __tool_record "zinit" "plugin-managers" missing "zinit" ""
+fi
+
 function ls-tools {
   if [[ " $* " == *" --fix-links "* ]]; then
     __fix_setup_symlinks
@@ -255,5 +262,9 @@ function ls-tools {
     echo ""
   done
 
-  print -P "%BUpdate shell plugins with:%b  zinit update"
+  if (( $+commands[zinit] )) || (( $+functions[zinit] )); then
+    print -P "%BUpdate shell plugins with:%b  zinit update"
+  else
+    print -P "%B%F{red}Install zinit with:%f%b  git clone https://github.com/zdharma-continuum/zinit.git \"\${XDG_DATA_HOME:-\${HOME}/.local/share}/zinit/zinit.git\""
+  fi
 }

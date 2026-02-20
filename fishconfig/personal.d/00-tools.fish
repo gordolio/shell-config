@@ -257,6 +257,13 @@ end
 # Run symlink checks at startup
 __check_setup_symlinks
 
+# Check plugin manager
+if functions -q fisher
+  __tool_record "fisher" "plugin-managers" loaded "fisher" ""
+else
+  __tool_record "fisher" "plugin-managers" missing "fisher" ""
+end
+
 function ls-tools
   if contains -- --fix-links $argv
     __fix_setup_symlinks
@@ -312,7 +319,14 @@ function ls-tools
   end
 
   set_color --bold
-  echo -n "Update shell plugins with: "
-  set_color normal
-  echo "fisher update"
+  if functions -q fisher
+    echo -n "Update shell plugins with: "
+    set_color normal
+    echo "fisher update"
+  else
+    set_color red
+    echo -n "Install fisher with: "
+    set_color normal
+    echo "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher"
+  end
 end
