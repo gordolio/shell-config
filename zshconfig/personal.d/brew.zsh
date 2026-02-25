@@ -70,6 +70,12 @@ function bugi {
     return 0
   fi
 
+  # Dynamic preview height: fill available space above the item list
+  local num_items=${#menu[@]}
+  local fixed_lines=7  # header(3) + info(1) + prompt(1) + preview border(2)
+  local preview_lines=$(( LINES - fixed_lines - num_items ))
+  (( preview_lines < 5 )) && preview_lines=5
+
   local picked
   picked=$(printf "%s\n" "${menu[@]}" | fzf --multi \
     --header='Keys:
@@ -82,7 +88,7 @@ function bugi {
     --marker='*' \
     --color='pointer:#00d7ff,marker:#ffd75f,hl:#00d7ff,hl+:#00d7ff,fg:#c0c0c0,bg:#1c1c1c,fg+:#ffffff,bg+:#262626,info:#ffd75f,prompt:#87ff87,header:#87afff' \
     --preview='brew info {2} 2>/dev/null || brew info --cask {2} 2>/dev/null' \
-    --preview-window='up:12:wrap')
+    --preview-window="up:${preview_lines}:wrap")
 
   [[ -n "$picked" ]] || return 0
 

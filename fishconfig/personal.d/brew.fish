@@ -79,6 +79,14 @@ function bugi --description "Upgrade selected outdated formulae/casks with fzf"
     return 0
   end
 
+  # Dynamic preview height: fill available space above the item list
+  set -l num_items (count $menu)
+  set -l fixed_lines 7  # header(3) + info(1) + prompt(1) + preview border(2)
+  set -l preview_lines (math $LINES - $fixed_lines - $num_items)
+  if test $preview_lines -lt 5
+    set preview_lines 5
+  end
+
   set -l picked (printf "%s\n" $menu | fzf --multi \
     --header='Keys:
   SPACE toggle • CTRL-A all • CTRL-D none • CTRL-T invert
@@ -90,7 +98,7 @@ function bugi --description "Upgrade selected outdated formulae/casks with fzf"
     --marker='✓' \
     --color='pointer:#00d7ff,marker:#ffd75f,hl:#00d7ff,hl+:#00d7ff,fg:#c0c0c0,bg:#1c1c1c,fg+:#ffffff,bg+:#262626,info:#ffd75f,prompt:#87ff87,header:#87afff' \
     --preview='brew info {2} 2>/dev/null; or brew info --cask {2} 2>/dev/null' \
-    --preview-window='up:12:wrap')
+    --preview-window="up:$preview_lines:wrap")
 
   test -n "$picked"; or return 0
 
