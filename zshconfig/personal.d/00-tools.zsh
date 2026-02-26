@@ -132,6 +132,7 @@ function __check_setup_symlinks {
   __tool_check_symlink ".config/fish" "$HOME/.config/fish" "$shell_config/fishconfig" "$category"
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" "$category"
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" "$category"
+  __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" "$category"
 }
 
 function __fix_symlink {
@@ -175,6 +176,7 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.config/fish" "$shell_config/fishconfig" ".config/fish"
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
+  __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
 
   echo ""
   echo "Done. Refreshing symlink status..."
