@@ -513,7 +513,7 @@ if exists("g:neovide")
 
   set shada='10,\"100,:20,%,n~/.local/share/nvim/shada/main.shada
 
-  au VimLeave * sleep 100m | call system('echo -e -n "\033]50;StealFocus\007">' . $TTY)
+  au VimLeave * sleep 100m | call system('echo -e -n "\033]50;StealFocus\007\033]1337;RequestAttention=fireworks\007">' . $TTY)
 
   " Jump to last position when reopening a file
   au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
