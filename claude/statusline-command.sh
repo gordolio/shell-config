@@ -89,27 +89,30 @@ if [ ! -f "$USAGE_DISABLED" ]; then
     if [ -f "$USAGE_CACHE" ]; then
         five_hour=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
         if [ -n "$five_hour" ]; then
-            usage=" ${BAR} ${CYAN}⚡ ${five_hour%.*}%${RESET}"
+            WARM_AMBER=$'\e[38;2;234;179;80m'
+            usage=" ${BAR} ${WARM_AMBER}⚡ ${five_hour%.*}%${RESET}"
         fi
     fi
 fi
 
-# Header change detection: check claude version and trigger capture if new
+# Version display and header change detection
 HEADER_DIR="$HOME/.claw-header-detect"
 header_info=""
 claude_version=$(readlink "$HOME/.local/bin/claude" 2>/dev/null | xargs basename 2>/dev/null || true)
 if [ -n "$claude_version" ]; then
+    DIM_LAVENDER=$'\e[38;2;147;130;186m'
+    version_display=" ${BAR} ${DIM_LAVENDER}v${claude_version}${RESET}"
     last_version=""
     [ -f "$HEADER_DIR/last-version" ] && last_version=$(cat "$HEADER_DIR/last-version" 2>/dev/null)
     if [ "$claude_version" != "$last_version" ]; then
+        version_display=" ${BAR} ${YELLOW}v${claude_version} ↑${RESET}"
         # Version changed — spawn capture in background (if not already running)
         CAPTURE_SCRIPT="$(dirname "$0")/capture-claude-headers.sh"
         if [ -x "$CAPTURE_SCRIPT" ] && [ ! -d "$HEADER_DIR/.capture.lock" ]; then
             if ! command -v mitmdump &>/dev/null; then
-                header_info=" ${BAR} ${YELLOW}↑ ${claude_version} (missing mitmdump)${RESET}"
+                header_info=" ${YELLOW}(missing mitmdump)${RESET}"
             else
                 nohup "$CAPTURE_SCRIPT" "$claude_version" > "$HEADER_DIR/capture.log" 2>&1 &
-                header_info=" ${BAR} ${YELLOW}↑ ${claude_version}${RESET}"
             fi
         fi
     fi
@@ -122,4 +125,4 @@ if [ -n "$claude_version" ]; then
 fi
 
 # Simple left-to-right layout with consistent bar separators
-echo "${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${battery}${usage}${header_info}"
+echo "${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${battery}${usage}${version_display}${header_info}"
