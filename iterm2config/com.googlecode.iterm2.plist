@@ -48,7 +48,7 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<key>AutoHideTmuxClientSession</key>
 	<false/>
 	<key>CheckTestRelease</key>
-	<false/>
+	<true/>
 	<key>ClickToSelectCommand</key>
 	<true/>
 	<key>ClosingHotkeySwitchesSpaces</key>
