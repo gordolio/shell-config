@@ -4,3 +4,4 @@ conf.d/*
 !conf.d/zz-personal.fish
 functions/*
 completions/*
+personal.d/local.fish
