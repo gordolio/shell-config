@@ -173,6 +173,15 @@ function __check_setup_symlinks
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" $category
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" $category
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" $category
+
+  # iTerm2 uses defaults instead of a symlink
+  set -l iterm_prefs_folder (defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
+  set -l iterm_load (defaults read com.googlecode.iterm2 LoadPrefsFromCustomFolder 2>/dev/null)
+  if test "$iterm_prefs_folder" = "$shell_config/iterm2config"; and test "$iterm_load" = "1"
+    __tool_record "iterm2-config" $category linked "PrefsCustomFolder -> $shell_config/iterm2config" ""
+  else
+    __tool_record "iterm2-config" $category wrong_target "PrefsCustomFolder=$iterm_prefs_folder, LoadPrefs=$iterm_load" ""
+  end
 end
 
 function __fix_symlink
@@ -226,6 +235,17 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
+
+  # iTerm2: configure via defaults
+  echo ""
+  echo "Configuring iTerm2 custom preferences folder..."
+  defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$shell_config/iterm2config"
+  defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+  # Also set up the git clean filter for this repo
+  git -C "$shell_config" config filter.iterm2-sanitize.clean 'iterm2config/iterm2-sanitize.sh'
+  set_color green
+  echo "✅ iTerm2 preferences pointed to $shell_config/iterm2config"
+  set_color normal
 
   echo ""
   echo "Done. Refreshing symlink status..."
