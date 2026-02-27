@@ -20,8 +20,15 @@ fi
 
 HEADER_DIR="$HOME/.claw-header-detect"
 ADDON_SCRIPT="$HEADER_DIR/header-dump.py"
-CAPTURE_TMP="$HEADER_DIR/.capture-tmp.json"
-LOCKFILE="$HEADER_DIR/.capture.lock"
+CAPTURE_TMP="$HEADER_DIR/capture-tmp.json"
+LOCKFILE="$HEADER_DIR/capture.lock"
+
+# Migrate old dot-prefixed files (dir is already hidden)
+for old in "$HEADER_DIR"/.[!.]*; do
+    [ -e "$old" ] || continue
+    new="$HEADER_DIR/$(basename "$old" | sed 's/^\.//')"
+    mv "$old" "$new" 2>/dev/null || true
+done
 
 mkdir -p "$HEADER_DIR"
 
@@ -57,7 +64,7 @@ import json
 import os
 
 CAPTURE_DIR = os.path.expanduser("~/.claw-header-detect")
-CAPTURE_TMP = os.path.join(CAPTURE_DIR, ".capture-tmp.json")
+CAPTURE_TMP = os.path.join(CAPTURE_DIR, "capture-tmp.json")
 
 # Collect all requests; prefer messages endpoint
 captured = []

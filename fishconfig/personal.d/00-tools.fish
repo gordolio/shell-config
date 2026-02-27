@@ -6,6 +6,9 @@ set -g __tool_statuses
 set -g __tool_details
 set -g __tool_paths
 
+set -g __home_icon (set_color 5B9BD5)(printf '\uf015')(set_color normal)(printf ' ')
+set -g __brew_icon (set_color D4A017)(printf '\uf0fc')(set_color normal)(printf ' ')
+
 function __tool_record
   set -l name $argv[1]
   set -l category $argv[2]
@@ -174,6 +177,8 @@ function __check_setup_symlinks
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" $category
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" $category
 
+  __tool_check_path "claw-header-detect" "$HOME/.claw-header-detect" $category dir
+
   # iTerm2 uses defaults instead of a symlink
   set -l iterm_prefs_folder (defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
   set -l iterm_load (defaults read com.googlecode.iterm2 LoadPrefsFromCustomFolder 2>/dev/null)
@@ -189,34 +194,33 @@ function __fix_symlink
   set -l target $argv[2]
   set -l name $argv[3]
 
+  set -l display_link (string replace -a $HOME "$__home_icon" "$link_path")
+  set display_link (string replace -a "/opt/homebrew" "$__brew_icon" $display_link)
+  set -l display_target (string replace -a $HOME "$__home_icon" "$target")
+  set display_target (string replace -a "/opt/homebrew" "$__brew_icon" $display_target)
+
   if test -L "$link_path"
-    # It's a symlink, remove it first
     rm "$link_path"
-    echo "Removed existing symlink: $link_path"
+    echo "Removed existing symlink: $display_link"
   else if test -e "$link_path"
-    # Something exists but it's not a symlink - back it up
     set -l backup "$link_path.backup"
     mv "$link_path" "$backup"
-    echo "Backed up existing file to: $backup"
+    echo "Backed up existing file to: "(string replace -a $HOME "$__home_icon" "$backup")
   end
 
   # Create parent directory if needed
   set -l parent_dir (dirname "$link_path")
   if not test -d "$parent_dir"
     mkdir -p "$parent_dir"
-    echo "Created directory: $parent_dir"
+    echo "Created directory: "(string replace -a $HOME "$__home_icon" "$parent_dir")
   end
 
   # Create the symlink
   ln -s "$target" "$link_path"
   if test $status -eq 0
-    set_color green
-    echo "✅ Created symlink: $link_path -> $target"
-    set_color normal
+    echo "✅ $display_link -> $display_target"
   else
-    set_color red
-    echo "❌ Failed to create symlink: $link_path"
-    set_color normal
+    echo "❌ Failed to create symlink: $display_link"
     return 1
   end
 end
@@ -236,16 +240,17 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
 
+  # Claude header detection directory
+  mkdir -p "$HOME/.claw-header-detect"
+  echo "✅ "$__home_icon"/.claw-header-detect"
+
   # iTerm2: configure via defaults
   echo ""
-  echo "Configuring iTerm2 custom preferences folder..."
   defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$shell_config/iterm2config"
   defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
   # Also set up the git clean filter for this repo
   git -C "$shell_config" config filter.iterm2-sanitize.clean 'iterm2config/iterm2-sanitize.sh'
-  set_color green
-  echo "✅ iTerm2 preferences pointed to $shell_config/iterm2config"
-  set_color normal
+  echo "✅ iTerm2 -> "(string replace -a $HOME "$__home_icon" "$shell_config")"iterm2config"
 
   echo ""
   echo "Done. Refreshing symlink status..."
@@ -333,7 +338,9 @@ function ls-tools
         end
         set_color normal
 
-        echo "$info - $tool_status"
+        set -l display_info (string replace -a $HOME "$__home_icon" "$info")
+        set display_info (string replace -a "/opt/homebrew" "$__brew_icon" $display_info)
+        echo "$display_info - $tool_status"
       end
     end
 

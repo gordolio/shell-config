@@ -68,7 +68,10 @@ if [ ! -f "$USAGE_DISABLED" ]; then
         cache_age=$((now - cache_mtime))
     fi
     if [ "$cache_age" -ge "$CACHE_MAX_AGE" ]; then
-        token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | jq -r '.claudeAiOauth.accessToken // empty')
+        # NOTE: security -w truncates at ~4096 bytes, breaking jq parsing
+        # when MCP OAuth tokens bloat the credential blob. Use grep instead.
+        # See: https://github.com/anthropics/claude-code/issues/28901
+        token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | grep -o '"accessToken":"[^"]*"' | head -1 | sed 's/"accessToken":"//; s/"$//')
         if [ -n "$token" ]; then
             # Use oauth beta flag captured from Claude Code, fall back to hardcoded
             BETA_HEADER=$(tr ',' '\n' < "$HOME/.claw-header-detect/anthropic-beta" 2>/dev/null | grep '^oauth-' || echo "oauth-2025-04-20")
@@ -107,8 +110,8 @@ if [ -n "$claude_version" ]; then
     if [ "$claude_version" != "$last_version" ]; then
         version_display=" ${BAR} ${YELLOW}v${claude_version} ↑${RESET}"
         # Version changed — spawn capture in background (if not already running)
-        CAPTURE_SCRIPT="$(dirname "$0")/capture-claude-headers.sh"
-        if [ -x "$CAPTURE_SCRIPT" ] && [ ! -d "$HEADER_DIR/.capture.lock" ]; then
+        CAPTURE_SCRIPT="$HOME/src/shell-config/claude/capture-claude-headers.sh"
+        if [ -x "$CAPTURE_SCRIPT" ] && [ ! -d "$HEADER_DIR/capture.lock" ]; then
             if ! command -v mitmdump &>/dev/null; then
                 header_info=" ${YELLOW}(missing mitmdump)${RESET}"
             else
