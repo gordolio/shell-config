@@ -73,11 +73,13 @@ if [ ! -f "$USAGE_DISABLED" ]; then
         # See: https://github.com/anthropics/claude-code/issues/28901
         token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | grep -o '"accessToken":"[^"]*"' | head -1 | sed 's/"accessToken":"//; s/"$//')
         if [ -n "$token" ]; then
-            # Use oauth beta flag captured from Claude Code, fall back to hardcoded
+            # Use headers captured from Claude Code, fall back to hardcoded
             BETA_HEADER=$(tr ',' '\n' < "$HOME/.claw-header-detect/anthropic-beta" 2>/dev/null | grep '^oauth-' || echo "oauth-2025-04-20")
+            UA_HEADER=$(cat "$HOME/.claw-header-detect/user-agent" 2>/dev/null || echo "claude-cli/unknown (external, cli)")
             http_code=$(curl -s --max-time 5 -o /tmp/claude-usage-response.json -w '%{http_code}' \
                 -H "Authorization: Bearer $token" \
                 -H "anthropic-beta: $BETA_HEADER" \
+                -H "User-Agent: $UA_HEADER" \
                 "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
             if [ "$http_code" -ge 400 ] && [ "$http_code" -lt 500 ] 2>/dev/null; then
                 echo "Disabled at $(date). HTTP $http_code. rm this file to retry." > "$USAGE_DISABLED"

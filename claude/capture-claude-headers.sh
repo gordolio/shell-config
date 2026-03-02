@@ -160,7 +160,7 @@ fi
 cp "$CAPTURE_TMP" "$HEADER_DIR/all-requests-${version}.json"
 
 # Headers to exclude from diff (volatile per-request values)
-DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count"])'
+DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count", "User-Agent"])'
 
 # Diff against previous if it exists
 if [ -f "$PREV_HEADERS" ]; then
@@ -194,6 +194,12 @@ else
     # anthropic-beta header is gone entirely — flag for manual review
     echo "anthropic-beta header missing in $version (captured $(date '+%Y-%m-%d %H:%M'))" > "$HEADER_DIR/beta-missing"
     rm -f "$HEADER_DIR/anthropic-beta"
+fi
+
+# Extract User-Agent for use by statusline
+ua_value=$(jq -r '.headers["User-Agent"] // empty' "$NEW_HEADERS" 2>/dev/null)
+if [ -n "$ua_value" ]; then
+    echo "$ua_value" > "$HEADER_DIR/user-agent"
 fi
 
 echo "Headers saved to $NEW_HEADERS"
