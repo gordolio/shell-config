@@ -159,13 +159,24 @@ function __fix_symlink {
   local display_target="${target//$HOME/$__home_icon}"
   display_target="${display_target//\/opt\/homebrew/$__brew_icon}"
 
+  # Check if symlink already exists and is correct
   if [[ -L "$link_path" ]]; then
+    local actual_target
+    actual_target=$(readlink "$link_path")
+    if [[ "$actual_target" == "$target" ]]; then
+      echo "✅ $display_link -> $display_target (ok)"
+      return 0
+    fi
+    local display_actual="${actual_target//$HOME/$__home_icon}"
+    display_actual="${display_actual//\/opt\/homebrew/$__brew_icon}"
     rm "$link_path"
-    echo "Removed existing symlink: $display_link"
+    echo "🔧 $display_link -> $display_target (was: $display_actual)"
   elif [[ -e "$link_path" ]]; then
     local backup="$link_path.backup"
     mv "$link_path" "$backup"
-    echo "Backed up existing file to: ${backup//$HOME/$__home_icon}"
+    echo "🔧 $display_link -> $display_target (backed up existing file)"
+  else
+    echo "🔧 $display_link -> $display_target (created)"
   fi
 
   # Create parent directory if needed
@@ -173,12 +184,9 @@ function __fix_symlink {
   parent_dir=$(dirname "$link_path")
   if [[ ! -d "$parent_dir" ]]; then
     mkdir -p "$parent_dir"
-    echo "Created directory: ${parent_dir//$HOME/$__home_icon}"
   fi
 
-  if ln -s "$target" "$link_path"; then
-    echo "✅ $display_link -> $display_target"
-  else
+  if ! ln -s "$target" "$link_path"; then
     echo "❌ Failed to create symlink: $display_link"
     return 1
   fi
@@ -187,7 +195,7 @@ function __fix_symlink {
 function __fix_setup_symlinks {
   local shell_config="$HOME/src/shell-config"
 
-  echo "Fixing symlinks..."
+  echo "Checking symlinks..."
   echo ""
 
   __fix_symlink "$HOME/.vim" "$shell_config/vimconfig" ".vim"
@@ -200,16 +208,27 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
 
   # Claude header detection directory
-  mkdir -p "$HOME/.claw-header-detect"
-  echo "✅ ${__home_icon}/.claw-header-detect"
+  if [[ -d "$HOME/.claw-header-detect" ]]; then
+    echo "✅ ${__home_icon}/.claw-header-detect (ok)"
+  else
+    mkdir -p "$HOME/.claw-header-detect"
+    echo "🔧 ${__home_icon}/.claw-header-detect (created)"
+  fi
 
   # iTerm2: configure via defaults
   echo ""
-  defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$shell_config/iterm2config"
-  defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+  local iterm_prefs_folder iterm_load
+  iterm_prefs_folder=$(defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
+  iterm_load=$(defaults read com.googlecode.iterm2 LoadPrefsFromCustomFolder 2>/dev/null)
+  if [[ "$iterm_prefs_folder" == "$shell_config/iterm2config" ]] && [[ "$iterm_load" == "1" ]]; then
+    echo "✅ iTerm2 -> ${shell_config//$HOME/$__home_icon}iterm2config (ok)"
+  else
+    defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$shell_config/iterm2config"
+    defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+    echo "🔧 iTerm2 -> ${shell_config//$HOME/$__home_icon}iterm2config (fixed)"
+  fi
   # Also set up the git clean filter for this repo
   git -C "$shell_config" config filter.iterm2-sanitize.clean 'iterm2config/iterm2-sanitize.sh'
-  echo "✅ iTerm2 -> ${shell_config//$HOME/$__home_icon}iterm2config"
 
   echo ""
   echo "Done. Refreshing symlink status..."
