@@ -26,7 +26,14 @@ set -x TTY (tty)
 
 if __tool_check_path "perlbrew-init" "$HOME/perl5/perlbrew/etc/perlbrew.fish" integration file
   set -gx PERLBREW_ROOT $HOME/perl5/perlbrew
+  set -gx PERLBREW_HOME $HOME/.perlbrew
   __tool_add_path "perlbrew-bin" "$PERLBREW_ROOT/bin" path prepend
+  # perlbrew.fish is broken on modern fish (uses bash ${} syntax),
+  # so find the most recent installed perl directly
+  set -l perlbrew_perls $PERLBREW_ROOT/perls/*/bin
+  if test (count $perlbrew_perls) -gt 0
+    __tool_add_path "perlbrew-perl" "$perlbrew_perls[-1]" path prepend
+  end
 end
 
 if __tool_check_path "perl5-home" "$HOME/perl5" integration dir

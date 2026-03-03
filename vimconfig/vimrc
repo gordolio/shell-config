@@ -50,24 +50,11 @@ nnoremap <silent> N   N:call HLNext(0.4)<cr>
 
 nnoremap ; :
 
-
-
 " 2021-01-05 Disabling this section - I don't know what it does
 " au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
 " au BufNewFile,BufRead *.txtmt setf mathdoc
 
 au BufRead /private/var/folders/*/sql* set ft=mysql
-
-" nerdtree commands
-function OpenMe()
-  NERDTree
-  wincmd l
-endfunction
-function CloseMe()
-  call system('echo -e -n "\033]50;StealFocus\007">/dev/tty')
-  q
-endfunction
-
 
 "set rtp+=/usr/local/lib/python2.7/site-packages/Powerline-beta-py2.7.egg/powerline/bindings/vim
 
@@ -125,18 +112,6 @@ au FileType xml command! -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
 augroup filetypedetect
 
 let mapleader=","
-au FileType javascript command Dash call SearchDash('javascript:')
-au FileType vim command Dash call SearchDash('vim:')
-au FileType perl command Dash call SearchDash('perl:')
-au FileType ruby command Dash call SearchDash('ruby:')
-
-
-map <leader>d :Dash<cr>
-function SearchDash(lib)
-  let s:url = "dash://".a:lib.expand("<cword>")
-  execute "silent ! /usr/bin/open ".s:url
-  redraw!
-endfunction
 
 function JsonTidy(line1,line2)
   let text = join(getline(a:line1, a:line2),'')
@@ -309,8 +284,6 @@ call plug#begin('~/.vim/plugged')
 
 " Plugins
 Plug 'dracula/vim'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
 
 " GraphQL syntax highlighting
 Plug 'jparise/vim-graphql'
@@ -334,8 +307,8 @@ Plug 'elzr/vim-json'
 Plug 'github/copilot.vim'
 
 " File navigation
-Plug 'preservim/nerdtree'
-Plug 'junegunn/fzf.vim'
+Plug 'nvim-neo-tree/neo-tree.nvim', {'branch': 'v3.x'}
+Plug 'MunifTanjim/nui.nvim'
 
 " Editing enhancements
 Plug 'tpope/vim-surround'
@@ -343,7 +316,23 @@ Plug 'tpope/vim-commentary'
 
 " Git integration
 Plug 'tpope/vim-fugitive'
-Plug 'airblade/vim-gitgutter'
+
+" Modern Neovim plugins
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/nvim-treesitter-textobjects'
+Plug 'nvim-telescope/telescope.nvim', {'branch': '0.1.x'}
+Plug 'nvim-telescope/telescope-fzf-native.nvim', {'do': 'make'}
+Plug 'nvim-lualine/lualine.nvim'
+Plug 'lewis6991/gitsigns.nvim'
+Plug 'folke/which-key.nvim'
+Plug 'lukas-reineke/indent-blankline.nvim'
+Plug 'windwp/nvim-autopairs'
+Plug 'akinsho/bufferline.nvim', {'tag': '*'}
+Plug 'folke/flash.nvim'
+Plug 'folke/trouble.nvim'
+Plug 'folke/todo-comments.nvim'
 
 call plug#end()
 
@@ -354,87 +343,41 @@ call plug#end()
 " GitHub Copilot - use Homebrew node instead of asdf
 let g:copilot_node_command = "/opt/homebrew/bin/node"
 
-" NERDTree
-nnoremap <leader>n :NERDTreeToggle<CR>
-nnoremap <leader>f :NERDTreeFind<CR>
-let NERDTreeShowHidden=1
-let NERDTreeIgnore=['\.git$', '\.DS_Store$']
-let g:NERDTreeWinSize=35
+" Neo-tree
+nnoremap <leader>n <cmd>Neotree toggle<CR>
+nnoremap <leader>f <cmd>Neotree reveal<CR>
 
 " Preferred editor window width
 let g:editor_width=100
+let g:neotree_width=35
 
-" Helper function to echo debug messages to terminal
-function TtyEcho(msg)
-  call writefile([a:msg], $TTY, 'a')
-endfunction
-
-" Auto-open NERDTree in git repositories
-function AutoNERDTree()
-  "call TtyEcho('[AutoNERDTree] Function called')
-  "call TtyEcho('[AutoNERDTree] argc()=' . argc())
-  "call TtyEcho('[AutoNERDTree] isdirectory(.git)=' . isdirectory('.git'))
-  "call TtyEcho('[AutoNERDTree] getcwd()=' . getcwd())
-
+" Auto-open Neo-tree in git repositories
+function AutoNeoTree()
   if argc() == 0 && isdirectory('.git')
-    "call TtyEcho('[AutoNERDTree] Opening NERDTree in git repo')
-    "call TtyEcho('[AutoNERDTree] Setting columns to ' . (g:editor_width + g:NERDTreeWinSize))
-    execute 'set columns=' . (g:editor_width + g:NERDTreeWinSize)
-    NERDTree
-    wincmd p
+    execute 'set columns=' . (g:editor_width + g:neotree_width)
+    Neotree show
   elseif argc() == 1 && isdirectory(argv()[0])
-    "call TtyEcho('[AutoNERDTree] Opening NERDTree for directory')
-    execute 'set columns=' . (g:editor_width + g:NERDTreeWinSize)
-    execute 'NERDTree' argv()[0]
-    wincmd p
+    execute 'set columns=' . (g:editor_width + g:neotree_width)
+    execute 'Neotree show dir=' . argv()[0]
   else
-    "call TtyEcho('[AutoNERDTree] Not opening NERDTree, setting columns to ' . g:editor_width)
     execute 'set columns=' . (g:editor_width)
   endif
-
-  " Close vim if NERDTree is the only window left
-  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
-
-  "call TtyEcho('[AutoNERDTree] Function complete, columns=' . &columns)
-
-  " Override MacVim's window size restoration when NERDTree is open
-  " Ignore all resizes for 500ms after opening (MacVim restoration + NERDTree adjustments)
-  " After that, allow manual resizes
-  if argc() == 0 && isdirectory('.git') || (argc() == 1 && isdirectory(argv()[0]))
-    let g:allow_manual_resize = 0
-    let target_cols = g:editor_width + g:NERDTreeWinSize
-
-    " After 2000ms, allow manual resizes (increased delay)
-    call timer_start(2000, {-> execute('let g:allow_manual_resize = 1') })
-    "call timer_start(2000, {-> TtyEcho('[Timer 2000ms] Manual resizing now allowed')})
-
-    "augroup FixColumnsAfterResize
-    "  autocmd!
-    "  autocmd VimResized * call TtyEcho('[VimResized] allow_manual=' . g:allow_manual_resize . ' editor_width=' . g:editor_width . ' NERDTreeWinSize=' . g:NERDTreeWinSize . ' target=' . target_cols . ' actual=' . &columns)
-    "  autocmd VimResized * if g:allow_manual_resize == 0 |
-            \ call TtyEcho('[VimResized] Fixing to ' . target_cols) |
-            \ execute 'set columns=' . target_cols |
-            \ else |
-            \ call TtyEcho('[VimResized] Allowing manual resize=' . &columns) |
-            \ endif
-    "augroup END
-  endif
 endfunction
 
-" fzf.vim
-nnoremap <C-p> :Files<CR>
-nnoremap <leader>b :Buffers<CR>
-nnoremap <leader>r :Rg<CR>
-nnoremap <leader>h :History<CR>
-" Use bat for preview window
-let g:fzf_preview_window = ['right:50%:hidden', 'ctrl-/']
+" Telescope
+nnoremap <C-p> <cmd>Telescope find_files<CR>
+nnoremap <leader>b <cmd>Telescope buffers<CR>
+nnoremap <leader>r <cmd>Telescope live_grep<CR>
+nnoremap <leader>h <cmd>Telescope oldfiles<CR>
+nnoremap <leader>/ <cmd>Telescope current_buffer_fuzzy_find<CR>
 
-" vim-gitgutter
+" gitsigns keybindings are configured in the lua section below
 set updatetime=100
-nnoremap <leader>gn :GitGutterNextHunk<CR>
-nnoremap <leader>gp :GitGutterPrevHunk<CR>
-nnoremap <leader>gs :GitGutterStageHunk<CR>
-nnoremap <leader>gu :GitGutterUndoHunk<CR>
+
+" Bufferline tab navigation
+nnoremap <S-l> <cmd>BufferLineCycleNext<CR>
+nnoremap <S-h> <cmd>BufferLineCyclePrev<CR>
+nnoremap <leader>x <cmd>bdelete<CR>
 
 " vim-fugitive
 nnoremap <leader>gb :Git blame<CR>
@@ -442,6 +385,177 @@ nnoremap <leader>gd :Gdiff<CR>
 nnoremap <leader>gl :Git log<CR>
 
 filetype plugin indent on
+
+" ============================================================================
+" Lua Plugin Configuration (Neovim only)
+" ============================================================================
+if has('nvim')
+lua << EOF
+local function safe_setup(name, config)
+  local ok, mod = pcall(require, name)
+  if ok then
+    if type(config) == 'function' then
+      config(mod)
+    elseif config then
+      mod.setup(config)
+    end
+  end
+end
+
+-- Treesitter: Better syntax highlighting that understands code structure
+safe_setup('nvim-treesitter.configs', function(ts)
+  ts.setup({
+    ensure_installed = {
+      'bash', 'css', 'fish', 'graphql', 'html', 'javascript', 'json',
+      'kotlin', 'lua', 'markdown', 'perl', 'python', 'ruby', 'typescript',
+      'vim', 'vimdoc', 'yaml',
+    },
+    highlight = { enable = true },
+    indent = { enable = true },
+    textobjects = {
+      select = {
+        enable = true,
+        lookahead = true,
+        keymaps = {
+          ['af'] = '@function.outer',
+          ['if'] = '@function.inner',
+          ['ac'] = '@class.outer',
+          ['ic'] = '@class.inner',
+        },
+      },
+      move = {
+        enable = true,
+        set_jumps = true,
+        goto_next_start = { [']m'] = '@function.outer' },
+        goto_previous_start = { ['[m'] = '@function.outer' },
+      },
+    },
+  })
+end)
+
+-- Telescope: Fuzzy finder for everything
+safe_setup('telescope', function(telescope)
+  telescope.setup({
+    defaults = {
+      file_ignore_patterns = { 'node_modules', '.git/' },
+    },
+  })
+  pcall(telescope.load_extension, 'fzf')
+end)
+
+-- Lualine: Modern statusline with powerline separators
+safe_setup('lualine', {
+  options = {
+    theme = 'dracula',
+    icons_enabled = true,
+  },
+  sections = {
+    lualine_a = { 'mode' },
+    lualine_b = { 'branch', 'diff', 'diagnostics' },
+    lualine_c = { 'filename' },
+    lualine_x = { 'encoding', 'fileformat', 'filetype' },
+    lualine_y = { 'progress' },
+    lualine_z = { 'location' },
+  },
+})
+
+-- Gitsigns: Git integration in the sign column
+safe_setup('gitsigns', {
+  on_attach = function(bufnr)
+    local gs = package.loaded.gitsigns
+    local function map(mode, l, r, opts)
+      opts = opts or {}
+      opts.buffer = bufnr
+      vim.keymap.set(mode, l, r, opts)
+    end
+    map('n', ']c', function() gs.nav_hunk('next') end, { desc = 'Next hunk' })
+    map('n', '[c', function() gs.nav_hunk('prev') end, { desc = 'Previous hunk' })
+    map('n', '<leader>gs', gs.stage_hunk, { desc = 'Stage hunk' })
+    map('n', '<leader>gu', gs.reset_hunk, { desc = 'Reset hunk' })
+    map('n', '<leader>gB', function() gs.blame_line({ full = true }) end, { desc = 'Blame line' })
+  end,
+})
+
+-- Neo-tree: File tree sidebar
+safe_setup('neo-tree', function(neotree)
+  neotree.setup({
+    window = {
+      width = 35,
+      mappings = {
+        ['<space>'] = 'toggle_node',
+      },
+    },
+    filesystem = {
+      filtered_items = {
+        hide_dotfiles = false,
+        hide_gitignored = false,
+        hide_by_name = { '.git', '.DS_Store' },
+      },
+      follow_current_file = { enabled = true },
+      use_libuv_file_watcher = true,
+    },
+    default_component_configs = {
+      git_status = {
+        symbols = {
+          added     = '',
+          modified  = '',
+          deleted   = '',
+          renamed   = '',
+          untracked = '',
+          ignored   = '',
+          unstaged  = '',
+          staged    = '',
+          conflict  = '',
+        },
+      },
+    },
+  })
+end)
+
+-- Which-key: Shows available keybinding hints as you type
+safe_setup('which-key', {})
+
+-- Indent-blankline: Visual indent guides
+safe_setup('ibl', {})
+
+-- Autopairs: Auto-close brackets and quotes
+safe_setup('nvim-autopairs', {})
+
+-- Bufferline: IDE-style tabs for open buffers
+safe_setup('bufferline', {
+  options = {
+    mode = 'buffers',
+    diagnostics = 'coc',
+    offsets = {
+      { filetype = 'neo-tree', text = 'Files', text_align = 'center', separator = true },
+    },
+    show_close_icon = false,
+    separator_style = 'slant',
+  },
+})
+
+-- Flash: Jump anywhere on screen
+safe_setup('flash', function(flash)
+  flash.setup({})
+  vim.keymap.set({ 'n', 'x', 'o' }, 's', function() flash.jump() end, { desc = 'Flash jump' })
+  vim.keymap.set({ 'n', 'x', 'o' }, 'S', function() flash.treesitter() end, { desc = 'Flash treesitter select' })
+end)
+
+-- Trouble: Pretty diagnostics list
+safe_setup('trouble', function(trouble)
+  trouble.setup({})
+  vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<CR>', { desc = 'Diagnostics' })
+  vim.keymap.set('n', '<leader>xd', '<cmd>Trouble diagnostics toggle filter.buf=0<CR>', { desc = 'Buffer diagnostics' })
+  vim.keymap.set('n', '<leader>xt', '<cmd>Trouble todo toggle<CR>', { desc = 'TODOs' })
+end)
+
+-- Todo-comments: Highlight and search TODO/FIXME/HACK
+safe_setup('todo-comments', {})
+
+-- Web-devicons: File type icons
+safe_setup('nvim-web-devicons', {})
+EOF
+endif
 
 if has("gui_vimr")
   " VimR specific stuff
@@ -469,21 +583,26 @@ if has("gui_macvim")
 
   color dracula
 
-  autocmd VimEnter * call AutoNERDTree()
+  autocmd VimEnter * call AutoNeoTree()
 
   "au VimLeave * call system('echo -e -n "\033]50;StealFocus\007">'.$TTY)
 endif
 
 if exists("g:neovide")
   " Neovide specific stuff
+  " Use perlbrew perl if available (version-independent)
+  let s:perlbrew_perl = glob('~/perl5/perlbrew/perls/*/bin/perl')
+  if !empty(s:perlbrew_perl)
+    let g:perl_host_prog = split(s:perlbrew_perl, "\n")[0]
+  endif
   set bg=dark
 
   set lines=40
-  autocmd VimEnter * set columns=100
   set nu
+  autocmd VimEnter * call AutoNeoTree()
   set nofoldenable
   let g:vim_json_syntax_conceal = 0
-  set guifont=JetBrainsMono\ Nerd\ Font:h14
+  set guifont=JetBrainsMonoNL\ Nerd\ Font:h14
 
   let g:html_use_css=1
 

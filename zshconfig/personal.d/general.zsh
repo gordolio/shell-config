@@ -21,7 +21,14 @@ fi
 __tool_add_path "git-credential-manager" "$HOME/apps/git-credential-manager" path append
 __tool_add_path "maven-bin" "$HOME/apps/maven/bin" path append
 
-# Perl configuration
+# Perlbrew
+if __tool_check_path "perlbrew-init" "$HOME/perl5/perlbrew/etc/bashrc" integration file; then
+  export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+  __tool_add_path "perlbrew-bin" "$PERLBREW_ROOT/bin" path prepend
+  source "$HOME/perl5/perlbrew/etc/bashrc"
+fi
+
+# Perl local::lib
 if __tool_check_path "perl5-home" "$HOME/perl5" integration dir; then
   __tool_add_path "perl5-bin" "$HOME/perl5/bin" path prepend
   export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
