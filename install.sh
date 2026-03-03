@@ -61,6 +61,7 @@ fix_symlink "$HOME/.gitconfig"                  "$SHELL_CONFIG/gitconfig/gitconf
 fix_symlink "$HOME/.config/fish"                "$SHELL_CONFIG/fishconfig"             ".config/fish"
 fix_symlink "$HOME/.config/atuin/config.toml"   "$SHELL_CONFIG/atuinconfig/config.toml" ".config/atuin"
 fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"       ".config/oh-my-posh"
+fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
 
 # --- pick shell and run ls-tools ---
 info "Verifying setup..."

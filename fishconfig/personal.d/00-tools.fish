@@ -309,7 +309,7 @@ else
 end
 
 function ls-tools
-  if contains -- --fix-links $argv
+  if contains -- --fix-links $argv; or contains -- --fix $argv
     __fix_setup_symlinks
     echo ""
   end

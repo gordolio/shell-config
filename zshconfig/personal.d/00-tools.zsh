@@ -266,7 +266,7 @@ else
 fi
 
 function ls-tools {
-  if [[ " $* " == *" --fix-links "* ]]; then
+  if [[ " $* " == *" --fix-links "* || " $* " == *" --fix "* ]]; then
     __fix_setup_symlinks
     echo ""
   fi
