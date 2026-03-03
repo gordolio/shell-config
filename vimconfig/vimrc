@@ -619,6 +619,21 @@ if exists("g:neovide")
   " Select all
   nmap <D-a> gg<S-v>G
 
+  " JetBrains-style shortcuts
+  " Cmd+Shift+F — search everywhere (live grep)
+  nnoremap <D-F> <cmd>Telescope live_grep<CR>
+  inoremap <D-F> <ESC><cmd>Telescope live_grep<CR>
+  " Cmd+P — find files (already mapped, but also from insert mode)
+  inoremap <D-p> <ESC><cmd>Telescope find_files<CR>
+  " Cmd+O — search for symbols/classes/functions (like Shift-Shift)
+  nnoremap <D-o> <cmd>Telescope lsp_dynamic_workspace_symbols<CR>
+  inoremap <D-o> <ESC><cmd>Telescope lsp_dynamic_workspace_symbols<CR>
+  " Cmd+E — recent files
+  nnoremap <D-e> <cmd>Telescope oldfiles<CR>
+  inoremap <D-e> <ESC><cmd>Telescope oldfiles<CR>
+  " Cmd+Shift+O — find symbols in current file
+  nnoremap <D-O> <cmd>Telescope lsp_document_symbols<CR>
+
   let g:neovide_cursor_animation_length = 0
   let g:neovide_cursor_trail_size = 0
 "  let g:neovide_cursor_antialiasing = v:false
