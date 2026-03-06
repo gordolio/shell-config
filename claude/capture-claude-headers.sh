@@ -160,7 +160,7 @@ fi
 cp "$CAPTURE_TMP" "$HEADER_DIR/all-requests-${version}.json"
 
 # Headers to exclude from diff (volatile per-request values)
-DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count", "User-Agent"])'
+DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count", "X-Stainless-Timeout", "User-Agent"])'
 
 # Diff against previous if it exists
 if [ -f "$PREV_HEADERS" ]; then
