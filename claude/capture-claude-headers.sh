@@ -160,7 +160,12 @@ fi
 cp "$CAPTURE_TMP" "$HEADER_DIR/all-requests-${version}.json"
 
 # Headers to exclude from diff (volatile per-request values)
-DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count", "X-Stainless-Timeout", "User-Agent"])'
+# For anthropic-beta, only keep the oauth-* flag — the rest (thinking, caching, etc.)
+# change between versions but don't affect our usage API call.
+DIFF_FILTER='del(.["Content-Length", "X-Stainless-Retry-Count", "X-Stainless-Timeout", "User-Agent"])
+    | if .["anthropic-beta"] then
+        .["anthropic-beta"] = ([.["anthropic-beta"] | split(",")[] | select(startswith("oauth-"))] | join(","))
+      else . end'
 
 # Diff against previous if it exists
 if [ -f "$PREV_HEADERS" ]; then
