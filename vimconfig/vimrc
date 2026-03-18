@@ -634,7 +634,7 @@ if exists("g:neovide")
   " Cmd+Shift+O — find symbols in current file
   nnoremap <D-O> <cmd>Telescope lsp_document_symbols<CR>
   " Cmd+N — open a new Neovide window
-  nnoremap <D-n> <cmd>silent !neovide<CR>
+  nnoremap <D-n> <Cmd>call system('neovide &')<CR>
 
   let g:neovide_cursor_animation_length = 0
   let g:neovide_cursor_trail_size = 0
