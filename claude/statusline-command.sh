@@ -81,7 +81,10 @@ if [ ! -f "$USAGE_DISABLED" ]; then
                 -H "anthropic-beta: $BETA_HEADER" \
                 -H "User-Agent: $UA_HEADER" \
                 "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-            if [ "$http_code" -ge 400 ] && [ "$http_code" -lt 500 ] 2>/dev/null; then
+            if [ "$http_code" = "429" ] 2>/dev/null; then
+                # Rate limited — transient, just skip this refresh
+                rm -f /tmp/claude-usage-response.json
+            elif [ "$http_code" -ge 400 ] && [ "$http_code" -lt 500 ] 2>/dev/null; then
                 echo "Disabled at $(date). HTTP $http_code. rm this file to retry." > "$USAGE_DISABLED"
                 rm -f /tmp/claude-usage-response.json
             elif jq -e '.five_hour' /tmp/claude-usage-response.json > /dev/null 2>&1; then
