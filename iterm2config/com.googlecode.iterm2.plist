@@ -26,7 +26,7 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<key>AiMaxTokens</key>
 	<integer>400000</integer>
 	<key>AiModel</key>
-	<string>gpt-5.1</string>
+	<string>gpt-5.2</string>
 	<key>AiResponseMaxTokens</key>
 	<integer>128000</integer>
 	<key>AitermURL</key>
@@ -1345,6 +1345,8 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<integer>7</integer>
 	<key>LeftOption</key>
 	<integer>2</integer>
+	<key>LeftTabBarWidth</key>
+	<real>281</real>
 	<key>MaxVertically</key>
 	<false/>
 	<key>NeverWarnAboutShortLivedSessions_629EC8DF-00A6-4101-AF56-1BD4F173E27D</key>
@@ -1625,7 +1627,7 @@ Respond with one or more commands. Do not include any explanation or additional 
 			<key>Blur</key>
 			<true/>
 			<key>Blur Radius</key>
-			<real>15.736425285532993</real>
+			<real>19.392051947767037</real>
 			<key>Bold Color</key>
 			<dict>
 				<key>Alpha Component</key>
@@ -2324,7 +2326,7 @@ Respond with one or more commands. Do not include any explanation or additional 
 			<key>Terminal Type</key>
 			<string>xterm-256color</string>
 			<key>Transparency</key>
-			<real>0.0</real>
+			<real>0.011081560283687944</real>
 			<key>Triggers</key>
 			<array/>
 			<key>Unlimited Scrollback</key>
@@ -4246,13 +4248,17 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<key>SwitchWindowModifier</key>
 	<integer>6</integer>
 	<key>TabStyleWithAutomaticOption</key>
-	<integer>5</integer>
+	<integer>4</integer>
 	<key>TabViewType</key>
-	<integer>0</integer>
+	<integer>2</integer>
 	<key>ThreeFingerEmulates</key>
 	<false/>
 	<key>TmuxDashboardLimit</key>
 	<integer>10</integer>
+	<key>ToolbeltTools</key>
+	<array>
+		<string>Command History</string>
+	</array>
 	<key>TripleClickSelectsFullWrappedLines</key>
 	<false/>
 	<key>URLHandlersByGuid</key>
