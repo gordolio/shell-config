@@ -4,6 +4,7 @@
 input=$(cat)
 current_dir=$(echo "$input" | jq -r '.workspace.current_dir // .cwd')
 model_name=$(echo "$input" | jq -r '.model.display_name // .model.id')
+model_id=$(echo "$input" | jq -r '.model.id // ""')
 
 # Get username
 username=$(whoami)
@@ -20,6 +21,34 @@ YELLOW=$'\e[93m'
 CYAN=$'\e[96m'
 GREEN=$'\e[92m'
 RESET=$'\e[0m'
+BOLD=$'\e[1m'
+DIM=$'\e[2m'
+WARM_AMBER=$'\e[38;2;234;179;80m'
+ORANGE=$'\e[38;5;208m'
+RED=$'\e[38;5;196m'
+DIM_LAVENDER=$'\e[38;2;147;130;186m'
+
+# Dot progress bar: 10 spaced dots colored by pct
+make_dots() {
+    local pct=$1
+    local color=$2
+    local filled=$(( pct * 10 / 100 ))
+    local empty=$(( 10 - filled ))
+    local bar=""
+    for (( i=0; i<filled; i++ )); do bar="${bar}${color}●${RESET} "; done
+    for (( i=0; i<empty;  i++ )); do bar="${bar}${DIM}○${RESET} "; done
+    echo "$bar"
+}
+
+# Color based on percentage
+pct_color() {
+    local pct=$1
+    if   [ "$pct" -lt 50 ]; then echo "$GREEN"
+    elif [ "$pct" -lt 75 ]; then echo "$WARM_AMBER"
+    elif [ "$pct" -lt 90 ]; then echo "$ORANGE"
+    else                          echo "$RED"
+    fi
+}
 
 # Get git info if we're in a git repo
 git_info=""
@@ -44,25 +73,23 @@ fi
 # Get current time (12-hour with AM/PM)
 current_time=$(date '+%I:%M %p')
 
-# Get battery level (macOS)
-battery=""
-if command -v pmset &> /dev/null; then
-    battery_pct=$(pmset -g batt | grep -Eo '[0-9]+%' | head -1)
-    if [ -n "$battery_pct" ]; then
-        battery=" ${BAR} ${GREEN}🔋 ${battery_pct}${RESET}"
-    fi
+# Context window % — shown on line 1 as plain number (no dots)
+ctx_display=""
+used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
+if [ -n "$used_pct" ] && [ "$used_pct" != "null" ]; then
+    ctx_int=${used_pct%.*}
+    ctx_col=$(pct_color "$ctx_int")
+    ctx_display=" ${BAR} ${ctx_col}ctx ${ctx_int}%${RESET}"
 fi
 
-# Get plan usage (5-hour session %) with 5-minute cache
-# If the API returns a 4xx, we write a flag file and stop trying.
-# To re-enable: rm /tmp/claude-usage-disabled
+# Get plan usage (5-hour + weekly) with 5-minute cache
+# To re-enable after 4xx: rm /tmp/claude-usage-disabled
 USAGE_CACHE="/tmp/claude-usage-cache.json"
 USAGE_DISABLED="/tmp/claude-usage-disabled"
 CACHE_MAX_AGE=300
-usage=""
 if [ ! -f "$USAGE_DISABLED" ]; then
     now=$(date +%s)
-    cache_age=$((now + CACHE_MAX_AGE)) # default: force refresh
+    cache_age=$((now + CACHE_MAX_AGE))  # default: force refresh
     if [ -f "$USAGE_CACHE" ]; then
         cache_mtime=$(stat -f %m "$USAGE_CACHE" 2>/dev/null || echo 0)
         cache_age=$((now - cache_mtime))
@@ -70,10 +97,8 @@ if [ ! -f "$USAGE_DISABLED" ]; then
     if [ "$cache_age" -ge "$CACHE_MAX_AGE" ]; then
         # NOTE: security -w truncates at ~4096 bytes, breaking jq parsing
         # when MCP OAuth tokens bloat the credential blob. Use grep instead.
-        # See: https://github.com/anthropics/claude-code/issues/28901
         token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | grep -o '"accessToken":"[^"]*"' | head -1 | sed 's/"accessToken":"//; s/"$//')
         if [ -n "$token" ]; then
-            # Use headers captured from Claude Code, fall back to hardcoded
             BETA_HEADER=$(tr ',' '\n' < "$HOME/.claw-header-detect/anthropic-beta" 2>/dev/null | grep '^oauth-' || echo "oauth-2025-04-20")
             UA_HEADER=$(cat "$HOME/.claw-header-detect/user-agent" 2>/dev/null || echo "claude-cli/unknown (external, cli)")
             http_code=$(curl -s --max-time 5 -o /tmp/claude-usage-response.json -w '%{http_code}' \
@@ -94,12 +119,57 @@ if [ ! -f "$USAGE_DISABLED" ]; then
             fi
         fi
     fi
-    if [ -f "$USAGE_CACHE" ]; then
-        five_hour=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
-        if [ -n "$five_hour" ]; then
-            WARM_AMBER=$'\e[38;2;234;179;80m'
-            usage=" ${BAR} ${WARM_AMBER}⚡ ${five_hour%.*}%${RESET}"
-        fi
+fi
+
+# Format seconds remaining → "Xhr Ymin" / "Ymin" / "Zs"
+format_until() {
+    local reset_at=${1%%.*}Z  # strip fractional seconds + tz offset → "...T%H:%M:%SZ"
+    local reset_ts
+    reset_ts=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$reset_at" "+%s" 2>/dev/null) || return
+    local diff=$(( reset_ts - $(date +%s) ))
+    [ "$diff" -le 0 ] && return
+    local hrs=$(( diff / 3600 ))
+    local mins=$(( (diff % 3600) / 60 ))
+    if   [ "$hrs"  -gt 0 ]; then echo "${hrs}hr ${mins}min"
+    elif [ "$mins" -gt 0 ]; then echo "${mins}min"
+    else                          echo "${diff}s"
+    fi
+}
+
+# Format reset timestamp → "Mon 3:00pm"
+format_reset_date() {
+    local reset_at=${1%%.*}Z  # strip fractional seconds + tz offset → "...T%H:%M:%SZ"
+    local reset_ts
+    reset_ts=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$reset_at" "+%s" 2>/dev/null) || return
+    date -r "$reset_ts" "+%a %l:%M%p" 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed 's/^ //'
+}
+
+# Build usage dot-bar lines from cache
+current_line=""
+weekly_line=""
+if [ -f "$USAGE_CACHE" ]; then
+    # Current (five-hour window)
+    five_pct=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
+    if [ -n "$five_pct" ]; then
+        five_int=${five_pct%.*}
+        five_col=$(pct_color "$five_int")
+        five_dots=$(make_dots "$five_int" "$five_col")
+        five_reset=$(jq -r '.five_hour.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
+        five_until=""
+        [ -n "$five_reset" ] && { until=$(format_until "$five_reset"); [ -n "$until" ] && five_until=" ${DIM}↺ ${until}${RESET}"; }
+        current_line="${DIM_LAVENDER}current${RESET} ${five_dots} ${five_col}${five_int}%${RESET}${five_until}"
+    fi
+
+    # Weekly
+    weekly_pct=$(jq -r '.seven_day.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
+    if [ -n "$weekly_pct" ]; then
+        weekly_int=${weekly_pct%.*}
+        weekly_col=$(pct_color "$weekly_int")
+        weekly_dots=$(make_dots "$weekly_int" "$weekly_col")
+        weekly_reset=$(jq -r '.seven_day.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
+        weekly_when=""
+        [ -n "$weekly_reset" ] && { when=$(format_reset_date "$weekly_reset"); [ -n "$when" ] && weekly_when=" ${DIM}↺ ${when}${RESET}"; }
+        weekly_line="${DIM_LAVENDER}weekly ${RESET} ${weekly_dots} ${weekly_col}${weekly_int}%${RESET}${weekly_when}"
     fi
 fi
 
@@ -107,8 +177,8 @@ fi
 HEADER_DIR="$HOME/.claw-header-detect"
 header_info=""
 claude_version=$(readlink "$HOME/.local/bin/claude" 2>/dev/null | xargs basename 2>/dev/null || true)
+version_display=""
 if [ -n "$claude_version" ]; then
-    DIM_LAVENDER=$'\e[38;2;147;130;186m'
     version_display=" ${BAR} ${DIM_LAVENDER}v${claude_version}${RESET}"
     last_version=""
     [ -f "$HEADER_DIR/last-version" ] && last_version=$(cat "$HEADER_DIR/last-version" 2>/dev/null)
@@ -132,5 +202,18 @@ if [ -n "$claude_version" ]; then
     fi
 fi
 
-# Simple left-to-right layout with consistent bar separators
-echo "${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${battery}${usage}${version_display}${header_info}"
+# Model display: bold cyan for Opus, plain cyan otherwise
+if echo "$model_id" | grep -qi "opus"; then
+    model_display="${BOLD}${CYAN}${model_name}${RESET}"
+else
+    model_display="${CYAN}${model_name}${RESET}"
+fi
+
+# ── LINE 1 ────────────────────────────────────────────────────────────────────
+echo "${model_display} ${BAR} ${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${ctx_display}${version_display}${header_info}"
+
+# ── LINE 2: current (five-hour) dot bar ───────────────────────────────────────
+if [ -n "$current_line" ]; then echo "$current_line"; fi
+
+# ── LINE 3: weekly dot bar ────────────────────────────────────────────────────
+if [ -n "$weekly_line" ]; then echo "$weekly_line"; fi
