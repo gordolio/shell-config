@@ -16,7 +16,9 @@ __tool_add_path "pyenv-bin" "$HOME/.pyenv/bin" path prepend
 
 __tool_add_path "cargo-bin" "$HOME/.cargo/bin" path append
 if ! __tool_add_path "mysql-homebrew" "/opt/homebrew/mysql/bin" path append; then
-  __tool_add_path "mysql-local" "/usr/local/mysql/bin" path append
+  if ! __tool_add_path "mysql-client-homebrew" "/opt/homebrew/opt/mysql-client/bin" path append; then
+    __tool_add_path "mysql-local" "/usr/local/mysql/bin" path append
+  fi
 fi
 __tool_add_path "git-credential-manager" "$HOME/apps/git-credential-manager" path append
 __tool_add_path "maven-bin" "$HOME/apps/maven/bin" path append
