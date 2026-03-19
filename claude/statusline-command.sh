@@ -3,7 +3,7 @@
 # Read JSON input from Claude Code
 input=$(cat)
 current_dir=$(echo "$input" | jq -r '.workspace.current_dir // .cwd')
-model_name=$(echo "$input" | jq -r '.model.display_name // .model.id')
+model_name=$(echo "$input" | jq -r '.model.display_name // .model.id' | sed 's/ ([^)]*context)//')
 model_id=$(echo "$input" | jq -r '.model.id // ""')
 
 # Get username
@@ -70,8 +70,8 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
     fi
 fi
 
-# Get current time (12-hour with AM/PM)
-current_time=$(date '+%I:%M %p')
+# Get current time (12-hour with am/pm, no space)
+current_time=$(date '+%I:%M%p' | tr '[:upper:]' '[:lower:]')
 
 # Context window % — shown on line 1 as plain number (no dots)
 ctx_display=""
