@@ -145,11 +145,7 @@ bindkey "^U" backward-kill-line
 alias ..="cd .."
 alias grep="grep --color=auto"
 alias egrep="egrep --color=auto"
-alias gs="git status"
-alias gd="git diff"
-alias gits="git"
 alias tidy="json_xs -f json -t json-pretty"
-alias g="git"
 alias lg="lazygit"
 alias ping="/sbin/ping"
 

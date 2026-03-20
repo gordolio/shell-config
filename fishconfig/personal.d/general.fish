@@ -131,7 +131,6 @@ end
 # nvm is initialized by its own conf.d/nvm.fish, just record for ls-tools
 functions -q nvm; and __tool_record "nvm" lang-managers loaded nvm ""
 
-alias gd "git diff"
 
 # pipx / local binaries (includes claude)
 __tool_add_path "pipx-bin" "$HOME/.local/bin" path append
