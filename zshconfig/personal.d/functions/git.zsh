@@ -1,7 +1,10 @@
-# git wrapper that adds clickable GitHub branch links to `git remote update`
+# git wrapper that adds clickable GitHub links to push/pull/remote update output
 function git {
   if [[ "$1" == "remote" && "$2" == "update" ]]; then
     __git_remote_update "${@:3}"
+  elif [[ "$1" == "push" || "$1" == "pull" ]]; then
+    command git "$@" 2>&1 | "$HOME/src/shell-config/bin/git-linkify"
+    return "${pipestatus[1]}"
   else
     command git "$@"
   fi
