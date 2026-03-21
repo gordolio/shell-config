@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+# git-linkify — add clickable OSC 8 hyperlinks to git push/pull output
+#
+# Usage: git push 2>&1 | git-linkify
+#        git pull 2>&1 | git-linkify
+#
+# Turns branch refs into links to PRs (if open) or commit pages,
+# and makes bare URLs in remote: messages cmd+clickable.
+
+use strict;
+use warnings;
+
+sub hyperlink {
+    my ($url, $text) = @_;
+    return "\e]8;;${url}\e\\\e[34;4:4m${text}\e[0m\e]8;;\e\\";
+}
+
+sub url_to_github {
+    my ($raw) = @_;
+    if ($raw =~ /^[a-z]+\@([^:]+):(.+)$/) {
+        my ($host, $path) = ($1, $2);
+        $path =~ s/\.git$//;
+        return "https://$host/$path";
+    }
+    if ($raw =~ m{^(?:https?|ssh)://(?:[^/\@]+\@)?([^/]+)/(.+)$}) {
+        my ($host, $path) = ($1, $2);
+        $path =~ s/\.git$//;
+        return "https://$host/$path";
+    }
+    if ($raw =~ /^([^\/:]+):(.+)$/) {
+        my ($host, $path) = ($1, $2);
+        $path =~ s/\.git$//;
+        return "https://$host/$path";
+    }
+    return undef;
+}
+
+my $github_base;
+my $pr_fetched = 0;
+my %pr_url;
+
+sub ensure_prs {
+    return if $pr_fetched;
+    $pr_fetched = 1;
+    return unless $github_base;
+    (my $repo = $github_base) =~ s{^https://[^/]+/}{};
+    my $json = `gh pr list --repo "$repo" --state open --json headRefName,url --limit 1000 2>/dev/null`;
+    return unless $json;
+    while ($json =~ /"headRefName"\s*:\s*"([^"]+)".*?"url"\s*:\s*"([^"]+)"/gs) {
+        $pr_url{$1} = $2;
+    }
+    # Handle reverse key order
+    while ($json =~ /"url"\s*:\s*"([^"]+)".*?"headRefName"\s*:\s*"([^"]+)"/gs) {
+        $pr_url{$2} //= $1;
+    }
+}
+
+while (<STDIN>) {
+    chomp;
+
+    # "To <url>" or "From <url>" — extract github base
+    if (/^(?:To|From)\s+(.+)/) {
+        $github_base //= url_to_github($1);
+        print "$_\n";
+        next;
+    }
+
+    # Ref update lines — covers all fetch/push summary formats:
+    #   "   old..new   branch -> branch"              (push, fast-forward pull)
+    #   " + old...new  branch -> remote/branch (...)" (forced update)
+    #   " * [new branch]  name -> remote/name"        (new branch)
+    #   " * [new tag]     tag  -> tag"                (new tag)
+    if ($github_base && /^(.+\s+->\s+)(\S+)(.*)$/) {
+        my ($before, $dst, $rest) = ($1, $2, $3);
+        # Extract branch name: strip remote/ prefix if present (e.g. origin/foo -> foo)
+        (my $branch = $dst) =~ s{^[^/]+/}{};
+        ensure_prs();
+        my $url = $pr_url{$branch} // "$github_base/commits/$branch/";
+        print $before . hyperlink($url, $dst) . $rest . "\n";
+        next;
+    }
+
+    # Bare URLs in remote: messages
+    if (/(https?:\/\/\S+)/) {
+        my $bare = $1;
+        my $linked = hyperlink($bare, $bare);
+        s/\Q$bare\E/$linked/;
+    }
+
+    print "$_\n";
+}
