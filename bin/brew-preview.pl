@@ -107,7 +107,7 @@ sub fetch_release {
         @auth = ('-H', "Authorization: token $ENV{HOMEBREW_GITHUB_API_TOKEN}");
     }
 
-    # Try tag formats: v1.2.3, 1.2.3, then fall back to latest release
+    # Try GitHub Releases first: v1.2.3, 1.2.3, then latest
     for my $prefix ('v', '', undef) {
         my $url;
         if (defined $prefix) {
@@ -116,14 +116,40 @@ sub fetch_release {
             $url = "https://api.github.com/repos/${gh_repo}/releases/latest";
         }
 
-        open my $fh, '-|', 'curl', '-sf', @auth, $url or next;
-        local $/;
-        my $body = <$fh>;
-        close $fh;
-        next if $? != 0 || !length($body // '');
-
-        my $data = eval { decode_json($body) };
-        return $data if $data && $data->{body};
+        my $data = api_get($url, \@auth) or next;
+        return $data if $data->{body};
     }
+
+    # Fall back to annotated tag messages (e.g. git, which doesn't use GitHub Releases)
+    for my $prefix ('v', '') {
+        my $ref = api_get(
+            "https://api.github.com/repos/${gh_repo}/git/ref/tags/${prefix}${version}",
+            \@auth,
+        ) or next;
+
+        my $obj = $ref->{object} // {};
+        next unless ($obj->{type} // '') eq 'tag';
+
+        my $tag = api_get($obj->{url}, \@auth) or next;
+        my $msg = $tag->{message} // '';
+        $msg =~ s/-----BEGIN PGP SIGNATURE-----.*//s;
+        $msg =~ s/\s+\z//;
+        next unless length $msg;
+
+        return { name => $tag->{tag} // '', body => $msg };
+    }
+
     return;
+}
+
+sub api_get {
+    my ($url, $auth) = @_;
+
+    open my $fh, '-|', 'curl', '-sf', @$auth, $url or return;
+    local $/;
+    my $body = <$fh>;
+    close $fh;
+    return if $? != 0 || !length($body // '');
+
+    return eval { decode_json($body) };
 }
