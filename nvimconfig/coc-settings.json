@@ -1,0 +1,4 @@
+{
+  "yaml.schemaStore.enable": true,
+  "yaml.schemaStore.url": "https://www.schemastore.org/api/json/catalog.json"
+}

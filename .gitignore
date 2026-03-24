@@ -18,3 +18,4 @@ vimconfig/bundle/*
 fishconfig/conf.d/local.fish
 fishconfig/conf.d/*-local.fish
 fishconfig/personal.d/local.fish
+vimconfig/vimrc.local

@@ -656,3 +656,9 @@ if exists("g:neovide")
 
   color dracula
 endif
+
+" Source local overrides (work-specific, not tracked)
+let s:local = fnamemodify(resolve(expand('<sfile>:p')), ':h') . '/vimrc.local'
+if filereadable(s:local)
+  execute 'source' s:local
+endif
