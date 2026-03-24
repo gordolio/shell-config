@@ -87,7 +87,7 @@ function bugi {
     --pointer='>' \
     --marker='*' \
     --color='pointer:#00d7ff,marker:#ffd75f,hl:#00d7ff,hl+:#00d7ff,fg:#c0c0c0,bg:#1c1c1c,fg+:#ffffff,bg+:#262626,info:#ffd75f,prompt:#87ff87,header:#87afff' \
-    --preview='brew info {2} 2>/dev/null || brew info --cask {2} 2>/dev/null' \
+    --preview='$HOME/src/shell-config/bin/brew-preview.pl {1} {2}' \
     --preview-window="up:${preview_lines}:wrap")
 
   [[ -n "$picked" ]] || return 0
