@@ -82,50 +82,15 @@ if [ -n "$used_pct" ] && [ "$used_pct" != "null" ]; then
     ctx_display=" ${BAR} ${ctx_col}ctx ${ctx_int}%${RESET}"
 fi
 
-# Get plan usage (5-hour + weekly) with 5-minute cache
-# To re-enable after 4xx: rm /tmp/claude-usage-disabled
-USAGE_CACHE="/tmp/claude-usage-cache.json"
-USAGE_DISABLED="/tmp/claude-usage-disabled"
-CACHE_MAX_AGE=300
-if [ ! -f "$USAGE_DISABLED" ]; then
-    now=$(date +%s)
-    cache_age=$((now + CACHE_MAX_AGE))  # default: force refresh
-    if [ -f "$USAGE_CACHE" ]; then
-        cache_mtime=$(stat -f %m "$USAGE_CACHE" 2>/dev/null || echo 0)
-        cache_age=$((now - cache_mtime))
-    fi
-    if [ "$cache_age" -ge "$CACHE_MAX_AGE" ]; then
-        # NOTE: security -w truncates at ~4096 bytes, breaking jq parsing
-        # when MCP OAuth tokens bloat the credential blob. Use grep instead.
-        token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | grep -o '"accessToken":"[^"]*"' | head -1 | sed 's/"accessToken":"//; s/"$//')
-        if [ -n "$token" ]; then
-            BETA_HEADER=$(tr ',' '\n' < "$HOME/.claw-header-detect/anthropic-beta" 2>/dev/null | grep '^oauth-' || echo "oauth-2025-04-20")
-            UA_HEADER=$(cat "$HOME/.claw-header-detect/user-agent" 2>/dev/null || echo "claude-cli/unknown (external, cli)")
-            http_code=$(curl -s --max-time 5 -o /tmp/claude-usage-response.json -w '%{http_code}' \
-                -H "Authorization: Bearer $token" \
-                -H "anthropic-beta: $BETA_HEADER" \
-                -H "User-Agent: $UA_HEADER" \
-                "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-            if [ "$http_code" = "429" ] 2>/dev/null; then
-                # Rate limited — transient, just skip this refresh
-                rm -f /tmp/claude-usage-response.json
-            elif [ "$http_code" -ge 400 ] && [ "$http_code" -lt 500 ] 2>/dev/null; then
-                echo "Disabled at $(date). HTTP $http_code. rm this file to retry." > "$USAGE_DISABLED"
-                rm -f /tmp/claude-usage-response.json
-            elif jq -e '.five_hour' /tmp/claude-usage-response.json > /dev/null 2>&1; then
-                mv /tmp/claude-usage-response.json "$USAGE_CACHE"
-            else
-                rm -f /tmp/claude-usage-response.json
-            fi
-        fi
-    fi
-fi
+# Get plan usage (5-hour + weekly) from Claude Code's native JSON input
+five_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null)
+five_reset_ts=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
+weekly_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
+weekly_reset_ts=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
 
 # Format seconds remaining → "Xhr Ymin" / "Ymin" / "Zs"
 format_until() {
-    local reset_at=${1%%.*}Z  # strip fractional seconds + tz offset → "...T%H:%M:%SZ"
-    local reset_ts
-    reset_ts=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$reset_at" "+%s" 2>/dev/null) || return
+    local reset_ts=$1
     local diff=$(( reset_ts - $(date +%s) ))
     [ "$diff" -le 0 ] && return
     local hrs=$(( diff / 3600 ))
@@ -138,68 +103,40 @@ format_until() {
 
 # Format reset timestamp → "Mon 3:00pm"
 format_reset_date() {
-    local reset_at=${1%%.*}Z  # strip fractional seconds + tz offset → "...T%H:%M:%SZ"
-    local reset_ts
-    reset_ts=$(TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$reset_at" "+%s" 2>/dev/null) || return
+    local reset_ts=$1
     date -r "$reset_ts" "+%a %l:%M%p" 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed 's/^ //'
 }
 
-# Build usage dot-bar lines from cache
+# Build usage dot-bar lines from native input
 current_line=""
 weekly_line=""
-if [ -f "$USAGE_CACHE" ]; then
-    # Current (five-hour window)
-    five_pct=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
-    if [ -n "$five_pct" ]; then
-        five_int=${five_pct%.*}
-        five_col=$(pct_color "$five_int")
-        five_dots=$(make_dots "$five_int" "$five_col")
-        five_reset=$(jq -r '.five_hour.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
-        five_until=""
-        [ -n "$five_reset" ] && { until=$(format_until "$five_reset"); [ -n "$until" ] && five_until=" ${DIM}↺ ${until}${RESET}"; }
-        current_line="${DIM_LAVENDER}current${RESET} ${five_dots} ${five_col}${five_int}%${RESET}${five_until}"
-    fi
 
-    # Weekly
-    weekly_pct=$(jq -r '.seven_day.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
-    if [ -n "$weekly_pct" ]; then
-        weekly_int=${weekly_pct%.*}
-        weekly_col=$(pct_color "$weekly_int")
-        weekly_dots=$(make_dots "$weekly_int" "$weekly_col")
-        weekly_reset=$(jq -r '.seven_day.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
-        weekly_when=""
-        [ -n "$weekly_reset" ] && { when=$(format_reset_date "$weekly_reset"); [ -n "$when" ] && weekly_when=" ${DIM}↺ ${when}${RESET}"; }
-        weekly_line="${DIM_LAVENDER}weekly ${RESET} ${weekly_dots} ${weekly_col}${weekly_int}%${RESET}${weekly_when}"
-    fi
+if [ -n "$five_pct" ]; then
+    five_int=${five_pct%.*}
+    five_col=$(pct_color "$five_int")
+    five_dots=$(make_dots "$five_int" "$five_col")
+    five_until=""
+    [ -n "$five_reset_ts" ] && { until=$(format_until "$five_reset_ts"); [ -n "$until" ] && five_until=" ${DIM}↺ ${until}${RESET}"; }
+    current_line="${DIM_LAVENDER}current${RESET} ${five_dots} ${five_col}${five_int}%${RESET}${five_until}"
 fi
 
-# Version display and header change detection
-HEADER_DIR="$HOME/.claw-header-detect"
-header_info=""
-claude_version=$(readlink "$HOME/.local/bin/claude" 2>/dev/null | xargs basename 2>/dev/null || true)
+if [ -n "$weekly_pct" ]; then
+    weekly_int=${weekly_pct%.*}
+    weekly_col=$(pct_color "$weekly_int")
+    weekly_dots=$(make_dots "$weekly_int" "$weekly_col")
+    weekly_when=""
+    [ -n "$weekly_reset_ts" ] && { when=$(format_reset_date "$weekly_reset_ts"); [ -n "$when" ] && weekly_when=" ${DIM}↺ ${when}${RESET}"; }
+    weekly_line="${DIM_LAVENDER}weekly ${RESET} ${weekly_dots} ${weekly_col}${weekly_int}%${RESET}${weekly_when}"
+fi
+
+# Version display
+claude_version=$(echo "$input" | jq -r '.version // empty' 2>/dev/null)
+if [ -z "$claude_version" ]; then
+    claude_version=$(readlink "$HOME/.local/bin/claude" 2>/dev/null | xargs basename 2>/dev/null || true)
+fi
 version_display=""
 if [ -n "$claude_version" ]; then
     version_display=" ${BAR} ${DIM_LAVENDER}v${claude_version}${RESET}"
-    last_version=""
-    [ -f "$HEADER_DIR/last-version" ] && last_version=$(cat "$HEADER_DIR/last-version" 2>/dev/null)
-    if [ "$claude_version" != "$last_version" ]; then
-        version_display=" ${BAR} ${YELLOW}v${claude_version} ↑${RESET}"
-        # Version changed — spawn capture in background (if not already running)
-        CAPTURE_SCRIPT="$HOME/src/shell-config/claude/capture-claude-headers.sh"
-        if [ -x "$CAPTURE_SCRIPT" ] && [ ! -d "$HEADER_DIR/capture.lock" ]; then
-            if ! command -v mitmdump &>/dev/null; then
-                header_info=" ${YELLOW}(missing mitmdump)${RESET}"
-            else
-                nohup "$CAPTURE_SCRIPT" "$claude_version" > "$HEADER_DIR/capture.log" 2>&1 &
-            fi
-        fi
-    fi
-    # Show notice if headers changed or beta header is missing
-    if [ -f "$HEADER_DIR/beta-missing" ]; then
-        header_info=" ${BAR} ${PINK}⚠ anthropic-beta gone${RESET}"
-    elif [ -f "$HEADER_DIR/changed-notice" ]; then
-        header_info=" ${BAR} ${YELLOW}⚡ headers changed${RESET}"
-    fi
 fi
 
 # Model display: bold cyan for Opus, plain cyan otherwise
@@ -210,7 +147,7 @@ else
 fi
 
 # ── LINE 1 ────────────────────────────────────────────────────────────────────
-echo "${model_display} ${BAR} ${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${ctx_display}${version_display}${header_info}"
+echo "${model_display} ${BAR} ${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${ctx_display}${version_display}"
 
 # ── LINE 2: current (five-hour) dot bar ───────────────────────────────────────
 if [ -n "$current_line" ]; then echo "$current_line"; fi
