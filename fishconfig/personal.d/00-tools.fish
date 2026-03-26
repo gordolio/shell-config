@@ -177,8 +177,6 @@ function __check_setup_symlinks
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" $category
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" $category
 
-  __tool_check_path "claw-header-detect" "$HOME/.claw-header-detect" $category dir
-
   # iTerm2 uses defaults instead of a symlink
   set -l iterm_prefs_folder (defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
   set -l iterm_load (defaults read com.googlecode.iterm2 LoadPrefsFromCustomFolder 2>/dev/null)
@@ -246,14 +244,6 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
-
-  # Claude header detection directory
-  if test -d "$HOME/.claw-header-detect"
-    echo "✅ "$__home_icon"/.claw-header-detect (ok)"
-  else
-    mkdir -p "$HOME/.claw-header-detect"
-    echo "🔧 "$__home_icon"/.claw-header-detect (created)"
-  end
 
   # iTerm2: configure via defaults
   echo ""
