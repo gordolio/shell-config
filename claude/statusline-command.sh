@@ -66,20 +66,18 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
             staging_changes=" +"
         fi
 
-        git_info=" ${BAR} ${YELLOW}⎇ ${branch}${working_changes}${staging_changes}${RESET}"
+        git_info="${YELLOW}⎇ ${branch}${working_changes}${staging_changes}${RESET}"
     fi
 fi
 
 # Get current time (12-hour with am/pm, no space)
 current_time=$(date '+%I:%M%p' | tr '[:upper:]' '[:lower:]')
 
-# Context window % — shown on line 1 as plain number (no dots)
-ctx_display=""
+# Context window %
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
 if [ -n "$used_pct" ] && [ "$used_pct" != "null" ]; then
     ctx_int=${used_pct%.*}
     ctx_col=$(pct_color "$ctx_int")
-    ctx_display=" ${BAR} ${ctx_col}ctx ${ctx_int}%${RESET}"
 fi
 
 # Get plan usage (5-hour + weekly) from Claude Code's native JSON input
@@ -134,10 +132,6 @@ claude_version=$(echo "$input" | jq -r '.version // empty' 2>/dev/null)
 if [ -z "$claude_version" ]; then
     claude_version=$(readlink "$HOME/.local/bin/claude" 2>/dev/null | xargs basename 2>/dev/null || true)
 fi
-version_display=""
-if [ -n "$claude_version" ]; then
-    version_display=" ${BAR} ${DIM_LAVENDER}v${claude_version}${RESET}"
-fi
 
 # Model display: bold cyan for Opus, plain cyan otherwise
 if echo "$model_id" | grep -qi "opus"; then
@@ -146,8 +140,49 @@ else
     model_display="${CYAN}${model_name}${RESET}"
 fi
 
+# Wrap-aware join: splits segments across lines at bar boundaries if too wide
+# Usage: wrap_segments <first_line_reserve> segment1 segment2 ...
+wrap_segments() {
+    local first_reserve=$1; shift
+    local cols=${COLUMNS:-$(stty size </dev/tty 2>/dev/null | awk '{print $2}')}
+    cols=${cols:-80}
+    local first_line=1
+    local segments=("$@")
+    local line=""
+    local line_vis=""
+    for seg in "${segments[@]}"; do
+        local seg_vis
+        seg_vis=$(printf '%s' "$seg" | sed $'s/\x1b\\[[0-9;]*m//g')
+        local max_cols=$cols
+        if [ "$first_line" -eq 1 ]; then
+            max_cols=$(( cols - first_reserve ))
+        fi
+        if [ -z "$line" ]; then
+            line="$seg"
+            line_vis="$seg_vis"
+        else
+            local add_vis=" │ ${seg_vis}"
+            if [ $(( ${#line_vis} + ${#add_vis} )) -gt "$max_cols" ]; then
+                echo "$line"
+                first_line=0
+                line="$seg"
+                line_vis="$seg_vis"
+            else
+                line="${line} ${BAR} ${seg}"
+                line_vis="${line_vis}${add_vis}"
+            fi
+        fi
+    done
+    [ -n "$line" ] && echo "$line"
+}
+
 # ── LINE 1 ────────────────────────────────────────────────────────────────────
-echo "${model_display} ${BAR} ${PURPLE}${username}${RESET} ${BAR} ${PINK}${path_basename}${RESET}${git_info} ${BAR} ${CYAN}${current_time}${RESET}${ctx_display}${version_display}"
+segments=("${model_display}" "${PURPLE}${username}${RESET}" "${PINK}${path_basename}${RESET}")
+[ -n "$git_info" ] && segments+=("${git_info}")
+segments+=("${CYAN}${current_time}${RESET}")
+[ -n "$used_pct" ] && [ "$used_pct" != "null" ] && segments+=("${ctx_col}ctx ${ctx_int}%${RESET}")
+[ -n "$claude_version" ] && segments+=("${DIM_LAVENDER}v${claude_version}${RESET}")
+wrap_segments 20 "${segments[@]}"
 
 # ── LINE 2: current (five-hour) dot bar ───────────────────────────────────────
 if [ -n "$current_line" ]; then echo "$current_line"; fi
