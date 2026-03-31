@@ -353,6 +353,9 @@ let g:neotree_width=35
 
 " Auto-open Neo-tree in git repositories
 function AutoNeoTree()
+  if !exists(':Neotree')
+    return
+  endif
   if argc() == 0 && isdirectory('.git')
     execute 'set columns=' . (g:editor_width + g:neotree_width)
     Neotree show
