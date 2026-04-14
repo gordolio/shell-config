@@ -1,0 +1,6 @@
+#!/bin/bash
+# Chain to repo-local hook if it exists
+LOCAL_HOOK="$(git rev-parse --git-dir)/hooks/$(basename "$0")"
+if [ -x "$LOCAL_HOOK" ]; then
+  exec "$LOCAL_HOOK" "$@"
+fi

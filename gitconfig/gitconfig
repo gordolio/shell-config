@@ -64,6 +64,7 @@
   precomposeUnicode = true
   # use delta for better diffs
   pager = delta
+  hooksPath = ~/src/shell-config/gitconfig/hooks
 
 [interactive]
   diffFilter = delta --color-only

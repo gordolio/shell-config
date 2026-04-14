@@ -1,5 +1,9 @@
 # Shell Config
 
+## Commit Rules
+
+- **Never** add `Co-Authored-By` trailers to git commits.
+
 ## Claude Code Statusline (`claude/`)
 
 The `claude/` directory contains the statusline script for Claude Code.
