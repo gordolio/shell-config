@@ -75,9 +75,12 @@ current_time=$(date '+%I:%M%p' | tr '[:upper:]' '[:lower:]')
 
 # Context window %
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null)
+ctx_line=""
 if [ -n "$used_pct" ] && [ "$used_pct" != "null" ]; then
     ctx_int=${used_pct%.*}
     ctx_col=$(pct_color "$ctx_int")
+    ctx_dots=$(make_dots "$ctx_int" "$ctx_col")
+    ctx_line="${DIM_LAVENDER}ctx    ${RESET} ${ctx_dots} ${ctx_col}${ctx_int}%${RESET}"
 fi
 
 # Get plan usage (5-hour + weekly) from Claude Code's native JSON input
@@ -180,12 +183,14 @@ wrap_segments() {
 segments=("${model_display}" "${PURPLE}${username}${RESET}" "${PINK}${path_basename}${RESET}")
 [ -n "$git_info" ] && segments+=("${git_info}")
 segments+=("${CYAN}${current_time}${RESET}")
-[ -n "$used_pct" ] && [ "$used_pct" != "null" ] && segments+=("${ctx_col}ctx ${ctx_int}%${RESET}")
 [ -n "$claude_version" ] && segments+=("${DIM_LAVENDER}v${claude_version}${RESET}")
 wrap_segments 20 "${segments[@]}"
 
-# ── LINE 2: current (five-hour) dot bar ───────────────────────────────────────
+# ── LINE 2: ctx (context window) dot bar ──────────────────────────────────────
+if [ -n "$ctx_line" ]; then echo "$ctx_line"; fi
+
+# ── LINE 3: current (five-hour) dot bar ───────────────────────────────────────
 if [ -n "$current_line" ]; then echo "$current_line"; fi
 
-# ── LINE 3: weekly dot bar ────────────────────────────────────────────────────
+# ── LINE 4: weekly dot bar ────────────────────────────────────────────────────
 if [ -n "$weekly_line" ]; then echo "$weekly_line"; fi
