@@ -38,6 +38,22 @@ sub url_to_github {
 my $github_base;
 my $pr_fetched = 0;
 my %pr_url;
+my @remotes;
+
+sub ensure_remotes {
+    return if @remotes;
+    my $out = `git remote 2>/dev/null`;
+    @remotes = grep { length } split /\n/, ($out // '');
+}
+
+sub strip_remote_prefix {
+    my ($ref) = @_;
+    ensure_remotes();
+    for my $r (@remotes) {
+        return $1 if $ref =~ m{^\Q$r\E/(.+)$}s;
+    }
+    return $ref;
+}
 
 sub ensure_prs {
     return if $pr_fetched;
@@ -72,8 +88,9 @@ while (<STDIN>) {
     #   " * [new tag]     tag  -> tag"                (new tag)
     if ($github_base && /^(.+\s+->\s+)(\S+)(.*)$/) {
         my ($before, $dst, $rest) = ($1, $2, $3);
-        # Extract branch name: strip remote/ prefix if present (e.g. origin/foo -> foo)
-        (my $branch = $dst) =~ s{^[^/]+/}{};
+        # For URL lookup only: strip known remote prefix (e.g. origin/foo -> foo).
+        # Keep $dst untouched so the displayed text matches real git output.
+        my $branch = strip_remote_prefix($dst);
         ensure_prs();
         my $url = $pr_url{$branch} // "$github_base/commits/$branch/";
         print $before . hyperlink($url, $dst) . $rest . "\n";
