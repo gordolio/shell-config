@@ -87,8 +87,8 @@ if status --is-interactive
 end
 
 
-# ASDF configuration
-__tool_source "asdf" "/opt/homebrew/opt/asdf/libexec/asdf.fish" integration
+# ASDF configuration (0.16+ is a Go rewrite — no asdf.fish, just put shims on PATH)
+__tool_add_path "asdf-shims" "$HOME/.asdf/shims" path prepend
 
 # The next line updates PATH for the Google Cloud SDK.
 __tool_source "google-cloud-sdk" "/opt/homebrew/share/google-cloud-sdk/path.fish.inc" integration
