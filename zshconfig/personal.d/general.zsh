@@ -148,6 +148,7 @@ alias egrep="egrep --color=auto"
 alias tidy="json_xs -f json -t json-pretty"
 alias lg="lazygit"
 alias ping="/sbin/ping"
+alias spark='ssh -t -L 5902:localhost:5902 gordolio@192.168.0.159 "tmux -CC new -A -s main"'
 
 # nocorrect aliases
 alias gradle='nocorrect gradle'

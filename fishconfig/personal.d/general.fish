@@ -142,4 +142,6 @@ __tool_check_cmd "curl" curl claude
 __tool_check_cmd "mitmproxy" mitmdump claude
 __tool_check_path "claude-statusline" "$HOME/src/shell-config/claude/statusline-command.sh" claude file
 
+alias spark 'ssh -t -L 5902:localhost:5902 gordolio@192.168.0.159 "tmux -CC new -A -s main"'
+
 fish_vi_key_bindings
