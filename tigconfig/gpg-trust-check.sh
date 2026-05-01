@@ -13,14 +13,27 @@ if [[ ! -r "$manifest" ]]; then
   exit 1
 fi
 
+case "$(uname -s)" in
+  Darwin) gpg_candidates=(/opt/homebrew/bin/gpg /usr/local/bin/gpg /usr/bin/gpg) ;;
+  *)      gpg_candidates=(/usr/bin/gpg /usr/local/bin/gpg /home/linuxbrew/.linuxbrew/bin/gpg) ;;
+esac
+
 real_gpg=""
-for c in /opt/homebrew/bin/gpg /usr/local/bin/gpg /usr/bin/gpg; do
+for c in "${gpg_candidates[@]}"; do
   [[ -x "$c" ]] && { real_gpg="$c"; break; }
 done
 if [[ -z "$real_gpg" ]]; then
   echo "gpg-trust-check: gpg binary not found" >&2
   exit 127
 fi
+
+# date-from-epoch helper (BSD `date -r` on macOS, GNU `date -d "@..."` on Linux)
+fmt_epoch() {
+  case "$(uname -s)" in
+    Darwin) date -r "$1" "+%Y-%m-%d" 2>/dev/null ;;
+    *)      date -d "@$1" "+%Y-%m-%d" 2>/dev/null ;;
+  esac
+}
 
 if [[ -t 1 ]]; then
   red=$(tput setaf 1 2>/dev/null) || red=""
@@ -74,7 +87,7 @@ while IFS= read -r line; do
   fi
 
   if [[ "$validity" == "e" || "$expiry_status" == "expired" ]]; then
-    expiry_date=$(date -r "$expiry" "+%Y-%m-%d" 2>/dev/null || echo unknown)
+    expiry_date=$(fmt_epoch "$expiry" || echo unknown)
     printf "  %s✗%s %s\n" "$red" "$reset" "$desc"
     printf "      %sExpired%s on %s.\n" "$bold" "$reset" "$expiry_date"
     if [[ "$expected" == "ultimate" ]]; then
@@ -115,7 +128,7 @@ while IFS= read -r line; do
   esac
 
   if [[ "$expiry_status" == "expiring" ]]; then
-    expiry_date=$(date -r "$expiry" "+%Y-%m-%d" 2>/dev/null || echo unknown)
+    expiry_date=$(fmt_epoch "$expiry" || echo unknown)
     days_left=$(( (expiry - now) / 86400 ))
     printf "  %s⚠%s  %s — %sexpires in %d days%s (%s)\n" \
       "$yellow" "$reset" "$desc" "$bold" "$days_left" "$reset" "$expiry_date"

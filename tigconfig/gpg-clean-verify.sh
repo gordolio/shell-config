@@ -9,8 +9,13 @@
 
 set -u
 
+case "$(uname -s)" in
+  Darwin) gpg_candidates=(/opt/homebrew/bin/gpg /usr/local/bin/gpg /usr/bin/gpg) ;;
+  *)      gpg_candidates=(/usr/bin/gpg /usr/local/bin/gpg /home/linuxbrew/.linuxbrew/bin/gpg) ;;
+esac
+
 real_gpg=""
-for candidate in /opt/homebrew/bin/gpg /usr/local/bin/gpg /usr/bin/gpg; do
+for candidate in "${gpg_candidates[@]}"; do
   if [[ -x "$candidate" ]]; then
     real_gpg="$candidate"
     break
@@ -37,7 +42,7 @@ ok_icon=$(printf '\xf3\xb0\x9e\x91')   # U+F0791 nf-md-check_decagram (verified 
 bad_icon=$(printf '\xef\x81\x9c')      # U+F05C nf-fa-times_circle_o
 indent="    "
 
-errfile=$(mktemp -t gpg-clean-verify.XXXXXX)
+errfile=$(mktemp "${TMPDIR:-/tmp}/gpg-clean-verify.XXXXXX")
 trap 'rm -f "$errfile"' EXIT
 
 "$real_gpg" "$@" 2>"$errfile"
