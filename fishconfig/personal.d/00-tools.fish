@@ -305,6 +305,10 @@ function ls-tools
     __fix_setup_symlinks
     echo ""
     set -l shell_config $HOME/src/shell-config
+    if test -x $shell_config/gitconfig/fix-local.sh
+      env SHELL_CONFIG=$shell_config bash $shell_config/gitconfig/fix-local.sh
+      echo ""
+    end
     if test -x $shell_config/tigconfig/gpg-trust-check.sh
       bash $shell_config/tigconfig/gpg-trust-check.sh
       echo ""

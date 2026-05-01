@@ -262,6 +262,10 @@ function ls-tools {
     __fix_setup_symlinks
     echo ""
     local shell_config="$HOME/src/shell-config"
+    if [[ -x "$shell_config/gitconfig/fix-local.sh" ]]; then
+      SHELL_CONFIG="$shell_config" bash "$shell_config/gitconfig/fix-local.sh"
+      echo ""
+    fi
     if [[ -x "$shell_config/tigconfig/gpg-trust-check.sh" ]]; then
       bash "$shell_config/tigconfig/gpg-trust-check.sh"
       echo ""

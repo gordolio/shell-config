@@ -64,6 +64,10 @@ fix_symlink "$HOME/.config/atuin/config.toml"   "$SHELL_CONFIG/atuinconfig/confi
 fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"       ".config/oh-my-posh"
 fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
 
+# --- machine-local gitconfig (paths that can't go in the portable gitconfig) ---
+info "Writing per-machine gitconfig..."
+SHELL_CONFIG="$SHELL_CONFIG" "$SHELL_CONFIG/gitconfig/fix-local.sh"
+
 # --- pick shell and run ls-tools ---
 info "Verifying setup..."
 if command -v fish &>/dev/null; then
