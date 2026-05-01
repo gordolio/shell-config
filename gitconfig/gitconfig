@@ -109,6 +109,9 @@
   line-graphics = utf-8
   truncation-delimiter = utf-8
 
+[gpg]
+  program = /Users/gordon/src/shell-config/tigconfig/gpg-clean-verify.sh
+
 
 [mergetool]
   keepBackup = false

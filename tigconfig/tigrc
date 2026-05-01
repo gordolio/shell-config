@@ -1,0 +1,7 @@
+set diff-options = --show-signature
+set main-view-id = yes
+set blame-options = -C -C -C
+
+color "Signer: "         green   default
+color "Signer-BAD: "     red     default
+color "Signer-Unknown: " yellow  default

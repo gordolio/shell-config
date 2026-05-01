@@ -172,6 +172,7 @@ function __check_setup_symlinks
   __tool_check_symlink ".vimrc" "$HOME/.vimrc" "$shell_config/vimconfig/vimrc" $category
   __tool_check_symlink ".zshrc" "$HOME/.zshrc" "$shell_config/zshconfig/zshrc" $category
   __tool_check_symlink ".gitconfig" "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" $category
+  __tool_check_symlink ".tigrc" "$HOME/.tigrc" "$shell_config/tigconfig/tigrc" $category
   __tool_check_symlink ".config/fish" "$HOME/.config/fish" "$shell_config/fishconfig" $category
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" $category
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" $category
@@ -240,6 +241,7 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.vimrc" "$shell_config/vimconfig/vimrc" ".vimrc"
   __fix_symlink "$HOME/.zshrc" "$shell_config/zshconfig/zshrc" ".zshrc"
   __fix_symlink "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" ".gitconfig"
+  __fix_symlink "$HOME/.tigrc" "$shell_config/tigconfig/tigrc" ".tigrc"
   __fix_symlink "$HOME/.config/fish" "$shell_config/fishconfig" ".config/fish"
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
@@ -302,6 +304,11 @@ function ls-tools
   if contains -- --fix-links $argv; or contains -- --fix $argv
     __fix_setup_symlinks
     echo ""
+    set -l shell_config $HOME/src/shell-config
+    if test -x $shell_config/tigconfig/gpg-trust-check.sh
+      bash $shell_config/tigconfig/gpg-trust-check.sh
+      echo ""
+    end
   end
 
   if not set -q __tool_names[1]
