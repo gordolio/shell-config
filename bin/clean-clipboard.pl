@@ -19,6 +19,8 @@ use strict;
 use warnings;
 
 my $text = `pbpaste`;
+# Bail if the pasteboard is empty - never overwrite a real clipboard with nothing.
+exit 0 if !defined $text || $text eq '';
 my @lines = split /\n/, $text, -1;
 
 # --- Pass 1: dedent ---
