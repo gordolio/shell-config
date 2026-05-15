@@ -137,6 +137,8 @@ function __check_setup_symlinks {
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" "$category"
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" "$category"
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" "$category"
+  __tool_check_symlink ".hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" "$category"
+  __tool_check_symlink ".claude/hooks/gh-allowlist.py" "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" "$category"
 
   # iTerm2 uses defaults instead of a symlink
   local iterm_prefs_folder
@@ -206,6 +208,8 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
+  __fix_symlink "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
+  __fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" ".claude/hooks/gh-allowlist.py"
 
   # iTerm2: configure via defaults
   echo ""

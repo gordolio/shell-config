@@ -5,32 +5,37 @@
 	<key>AI Prompt</key>
 	<string>You are going to translate a natural language description to a series of commands for the \(shell) shell.
 Here is some information about the environment: \(uname)
-Respond with one or more commands. Do not include any explanation or additional text besides the commands.Request: \(ai.prompt)
-</string>
+Respond with one or more commands. IMPORTANT: Do NOT include any explanation or additional text besides the commands. Do NOT respond in any type of markdown. ONLY respond with \(shell) commands. Request: \(ai.prompt)</string>
+	<key>AI Safety Check</key>
+	<false/>
+	<key>AI Timeout</key>
+	<integer>30</integer>
 	<key>AIFeatureFunctionCalling</key>
 	<true/>
 	<key>AIFeatureHostedCodeInterpeter</key>
-	<true/>
+	<false/>
 	<key>AIFeatureHostedFileSearch</key>
-	<true/>
+	<false/>
 	<key>AIFeatureHostedWebSearch</key>
-	<true/>
+	<false/>
 	<key>AIFeatureStreamingResponses</key>
 	<true/>
 	<key>AITermAPI</key>
-	<integer>2</integer>
+	<integer>7</integer>
 	<key>AIVectorStore</key>
 	<integer>0</integer>
+	<key>AIVendor</key>
+	<integer>4</integer>
 	<key>AdjustWindowForFontSizeChange</key>
 	<false/>
 	<key>AiMaxTokens</key>
-	<integer>1050000</integer>
+	<integer>200000</integer>
 	<key>AiModel</key>
-	<string>gpt-5.4</string>
+	<string>claude-opus-4-6</string>
 	<key>AiResponseMaxTokens</key>
 	<integer>128000</integer>
 	<key>AitermURL</key>
-	<string>https://api.openai.com/v1/responses</string>
+	<string>https://api.anthropic.com/v1/messages</string>
 	<key>AllowClipboardAccess</key>
 	<true/>
 	<key>AnimateDimming</key>
@@ -38,6 +43,8 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<key>AutoHideTmuxClientSession</key>
 	<false/>
 	<key>CheckTestRelease</key>
+	<true/>
+	<key>ClaudeCodeWorkgroupUpsellSuppressed</key>
 	<true/>
 	<key>ClickToSelectCommand</key>
 	<true/>
@@ -6253,6 +6260,8 @@ Respond with one or more commands. Do not include any explanation or additional 
 	<true/>
 	<key>UseLionStyleFullscreen</key>
 	<true/>
+	<key>UseRecommendedAIModel</key>
+	<false/>
 	<key>VisualIndicatorForEsc</key>
 	<false/>
 	<key>WebKitAdblockEnabled</key>

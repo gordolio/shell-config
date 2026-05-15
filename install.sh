@@ -63,6 +63,8 @@ fix_symlink "$HOME/.config/fish"                "$SHELL_CONFIG/fishconfig"      
 fix_symlink "$HOME/.config/atuin/config.toml"   "$SHELL_CONFIG/atuinconfig/config.toml" ".config/atuin"
 fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"       ".config/oh-my-posh"
 fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
+fix_symlink "$HOME/.hammerspoon/init.lua"       "$SHELL_CONFIG/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
+fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$SHELL_CONFIG/claude/gh-allowlist.py"   ".claude/hooks/gh-allowlist.py"
 
 # --- machine-local gitconfig (paths that can't go in the portable gitconfig) ---
 info "Writing per-machine gitconfig..."
