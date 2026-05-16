@@ -46,7 +46,21 @@ blocks:
     - "{{ if gt .Behind 0 }}#B388FF{{ end }}"
   - properties:
       fetch_version: true
-    template: " \U000f048a {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} "
+      extensions:
+      - bun.lock
+      - bun.lockb
+      - bunfig.toml
+    template: " \U000f048a {{ .Full }} "
+    foreground: "#ffffff"
+    powerline_symbol: 
+    background: "#6CA35E"
+    type: bun
+    style: powerline
+  - properties:
+      fetch_version: true
+    # Hide node when a Bun lockfile is present so Bun projects show the
+    # bun segment above instead of the installed Node version.
+    template: "{{ if not (glob \"bun.lock*\") }} \U000f048a {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }} {{ end }}"
     foreground: "#ffffff"
     powerline_symbol: 
     background: "#6CA35E"
