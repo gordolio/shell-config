@@ -303,8 +303,10 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " JSON highlighting
 Plug 'elzr/vim-json'
 
-" GitHub Copilot
-Plug 'github/copilot.vim'
+" AI: minuet-ai for local-LLM autocomplete, codecompanion for Anthropic chat
+" (Continue.dev has no vim plugin; these are the Neovim equivalents)
+Plug 'milanglacier/minuet-ai.nvim'
+Plug 'olimorris/codecompanion.nvim'
 
 " File navigation
 Plug 'nvim-neo-tree/neo-tree.nvim', {'branch': 'v3.x'}
@@ -340,8 +342,7 @@ call plug#end()
 " Plugin Configurations
 " ============================================================================
 
-" GitHub Copilot - use Homebrew node instead of asdf
-let g:copilot_node_command = "/opt/homebrew/bin/node"
+" AI plugins (minuet-ai, codecompanion) are configured in the Lua section below
 
 " Neo-tree
 nnoremap <leader>n <cmd>Neotree toggle<CR>
@@ -557,6 +558,82 @@ safe_setup('todo-comments', {})
 
 -- Web-devicons: File type icons
 safe_setup('nvim-web-devicons', {})
+
+-- Minuet: Copilot-style inline autocomplete, backed by an Ollama FIM model.
+-- Virtual-text mode (no nvim-cmp/blink needed; won't fight coc.nvim on <Tab>).
+-- Endpoint and model default to a local Ollama but can be overridden
+-- privately (e.g. a LAN box) by setting g:minuet_fim_endpoint and
+-- g:minuet_fim_model in vimrc.local (gitignored) -- keeps machine-specific
+-- hosts out of this public repo. Use a *base* (not instruct) FIM model.
+-- Deferred to VimEnter so vimrc.local (sourced near EOF) is read first.
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    safe_setup('minuet', function(minuet)
+      minuet.setup({
+        -- Default is 3s; minuet cancels silently (no popup, no error) on
+        -- timeout. A remote Ollama cold-loading the model measured ~8s, so
+        -- 10s covers the worst case (first request after model eviction).
+        -- Warm requests are sub-second. Keep the model resident server-side
+        -- (OLLAMA_KEEP_ALIVE=-1) to avoid cold-starts entirely.
+        request_timeout = 10,
+        provider = 'openai_fim_compatible',
+        provider_options = {
+          openai_fim_compatible = {
+            -- 'TERM' = read the always-set $TERM env var as a dummy key;
+            -- Ollama needs no real auth. (minuet's documented Ollama trick.)
+            api_key = 'TERM',
+            name = 'Ollama',
+            end_point = vim.g.minuet_fim_endpoint or 'http://localhost:11434/v1/completions',
+            model = vim.g.minuet_fim_model or 'qwen2.5-coder:7b-base',
+            optional = {
+              max_tokens = 256,
+              top_p = 0.9,
+            },
+          },
+        },
+        virtualtext = {
+          auto_trigger_ft = { '*' },
+          keymap = {
+            accept = '<C-g>',        -- accept full suggestion
+            accept_line = '<C-l>',   -- accept one line
+            prev = '<M-[>',          -- cycle to previous suggestion
+            next = '<M-]>',          -- cycle to next suggestion
+            dismiss = '<C-]>',       -- dismiss
+          },
+        },
+      })
+    end)
+  end,
+})
+
+-- CodeCompanion: Continue-style chat sidebar + inline edits, over Anthropic.
+-- The API key is NOT read from ~/.continue/config.yaml. It is resolved
+-- lazily on first AI request (not at startup) from whatever command is in
+-- g:anthropic_api_key_cmd, falling back to the ANTHROPIC_API_KEY env var.
+-- Set g:anthropic_api_key_cmd privately in vimrc.local (gitignored), e.g. a
+-- `op read ...` 1Password CLI command — keeps the secret reference out of
+-- this public repo.
+safe_setup('codecompanion', function(cc)
+  cc.setup({
+    adapters = {
+      anthropic = function()
+        local key_cmd = vim.g.anthropic_api_key_cmd
+        return require('codecompanion.adapters').extend('anthropic', {
+          env = {
+            api_key = key_cmd and ('cmd:' .. key_cmd) or 'ANTHROPIC_API_KEY',
+          },
+        })
+      end,
+    },
+    strategies = {
+      chat = { adapter = 'anthropic' },
+      inline = { adapter = 'anthropic' },
+    },
+  })
+  vim.keymap.set({ 'n', 'v' }, '<leader>aa', '<cmd>CodeCompanionActions<CR>', { desc = 'AI: actions menu' })
+  vim.keymap.set({ 'n', 'v' }, '<leader>ac', '<cmd>CodeCompanionChat Toggle<CR>', { desc = 'AI: toggle chat' })
+  vim.keymap.set('v', '<leader>ai', '<cmd>CodeCompanion<CR>', { desc = 'AI: inline edit selection' })
+end)
 EOF
 endif
 
