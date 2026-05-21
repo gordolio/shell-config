@@ -171,7 +171,7 @@ fi
 hdr "6. Exfiltration / C2 strings in first-party source"
 # Match strings specific to the worm, and report file:line:match so hits can
 # be judged quickly. Vendored dependency trees are excluded as extra noise
-# reduction. Note: the cloud-metadata IP (169.254.169.254) is deliberately NOT
+# reduction. Note: the cloud-metadata IP (you know the one) is deliberately NOT
 # matched — every AWS/GCP app, SDK, config dump and log references it, so it is
 # pure noise here. The worm's IMDS probing lives in bun_environment.js, which
 # section 1 catches by filename and the detector catches by hash.
