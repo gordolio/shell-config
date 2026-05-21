@@ -65,6 +65,7 @@ fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"
 fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
 fix_symlink "$HOME/.hammerspoon/init.lua"       "$SHELL_CONFIG/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
 fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$SHELL_CONFIG/claude/gh-allowlist.py"   ".claude/hooks/gh-allowlist.py"
+fix_symlink "$HOME/bin/shai-hulud-check"          "$SHELL_CONFIG/bin/shai-hulud-check.sh"  "bin/shai-hulud-check"
 
 # --- machine-local gitconfig (paths that can't go in the portable gitconfig) ---
 info "Writing per-machine gitconfig..."

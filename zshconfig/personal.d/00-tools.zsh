@@ -139,6 +139,7 @@ function __check_setup_symlinks {
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" "$category"
   __tool_check_symlink ".hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" "$category"
   __tool_check_symlink ".claude/hooks/gh-allowlist.py" "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" "$category"
+  __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "$category"
 
   # iTerm2 uses defaults instead of a symlink
   local iterm_prefs_folder
@@ -210,6 +211,7 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
   __fix_symlink "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
   __fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" ".claude/hooks/gh-allowlist.py"
+  __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
 
   # iTerm2: configure via defaults
   echo ""
