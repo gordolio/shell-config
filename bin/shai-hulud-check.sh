@@ -170,10 +170,12 @@ fi
 # ---------------------------------------------------------------------------
 hdr "6. Exfiltration / C2 strings in first-party source"
 # Match strings specific to the worm, and report file:line:match so hits can
-# be judged quickly. Vendored dependency trees are excluded on purpose: legit
-# cloud SDKs (aws-sdk, googleauth, ...) reference the IMDS IP 169.254.169.254
-# constantly, so a hit there is noise — only first-party code is worth a look.
-PATTERNS='Sha1-Hulud: The Second Coming|SHA1HULUD|bun_environment\.js|webhook\.site|169\.254\.169\.254'
+# be judged quickly. Vendored dependency trees are excluded as extra noise
+# reduction. Note: the cloud-metadata IP (169.254.169.254) is deliberately NOT
+# matched — every AWS/GCP app, SDK, config dump and log references it, so it is
+# pure noise here. The worm's IMDS probing lives in bun_environment.js, which
+# section 1 catches by filename and the detector catches by hash.
+PATTERNS='Sha1-Hulud: The Second Coming|SHA1HULUD|bun_environment\.js|webhook\.site'
 SKIP_DIRS=( node_modules .git Library .cache vendor .venv venv dist build \
             site-packages shai-hulud-detect test-cases )
 EXCLUDES=()
