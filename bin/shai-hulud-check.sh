@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # shai-hulud-check.sh — local triage for the Shai-Hulud npm supply-chain worm
 #
@@ -24,6 +24,9 @@ Arguments:
 
 Options:
   --no-detector    Skip the Cobenian dependency-graph audit (host triage only).
+  --ignore PATH    Skip findings under PATH. Repeatable. The detector clone
+                   (~/src/shai-hulud-detect) is always ignored — its test-cases
+                   directory holds intentional malware samples.
   -h, --help       Show this help and exit.
 
 The Cobenian detector is cloned to ~/src/shai-hulud-detect on first run and
@@ -34,16 +37,34 @@ EOF
 }
 
 RUN_DETECTOR=1
-ARGS=()
-for a in "$@"; do
-  case "$a" in
+# Paths whose findings are suppressed. The detector clone is always here: it
+# ships deliberate malware fixtures that would otherwise trip every check.
+IGNORE_PATHS=( "$HOME/src/shai-hulud-detect" )
+# Scan roots are collected straight into ROOTS — no intermediate array — so we
+# never expand an empty array under `set -u` (a fatal bug on bash 3.2).
+ROOTS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
     --no-detector) RUN_DETECTOR=0 ;;
+    --ignore)      shift
+                   [ -n "${1:-}" ] || { echo "--ignore needs a path" >&2; exit 2; }
+                   IGNORE_PATHS+=("$(cd "$1" 2>/dev/null && pwd || echo "${1%/}")") ;;
     -h|--help)     usage; exit 0 ;;
     --*)           usage >&2; exit 2 ;;
-    *)             ARGS+=("$a") ;;
+    *)             ROOTS+=("$1") ;;
   esac
+  shift
 done
-set -- "${ARGS[@]}"
+
+# True if PATH lies inside any ignored directory.
+is_ignored() {
+  local p=$1 ig
+  for ig in "${IGNORE_PATHS[@]}"; do
+    [ -n "$ig" ] || continue
+    case "$p" in "$ig"|"$ig"/*) return 0 ;; esac
+  done
+  return 1
+}
 
 HITS=0
 WARN=0
@@ -57,7 +78,6 @@ hit()  { red   "  [PWNED?] $*"; HITS=$((HITS+1)); }
 warn() { ylw   "  [CHECK ] $*"; WARN=$((WARN+1)); }
 ok()   { grn   "  [ ok   ] $*"; }
 
-ROOTS=("$@")
 [ ${#ROOTS[@]} -eq 0 ] && ROOTS=("$HOME")
 
 # Directories that are noisy / not worth descending into.
@@ -73,12 +93,16 @@ for root in "${ROOTS[@]}"; do
   [ -d "$root" ] || continue
   for n in "${MAL_NAMES[@]}"; do
     while IFS= read -r f; do
-      [ -n "$f" ] && hit "payload file: $f"
+      [ -n "$f" ] || continue
+      is_ignored "$f" && continue
+      hit "payload file: $f"
     done < <(find "$root" \( "${PRUNE[@]}" \) -prune -o -type f -name "$n" -print 2>/dev/null)
   done
   # Mini-variant obfuscated credential stealer: FilePII_<hex>.js
   while IFS= read -r f; do
-    [ -n "$f" ] && hit "credential-stealer file: $f"
+    [ -n "$f" ] || continue
+    is_ignored "$f" && continue
+    hit "credential-stealer file: $f"
   done < <(find "$root" \( "${PRUNE[@]}" \) -prune -o -type f -name 'FilePII_*.js' -print 2>/dev/null)
 done
 [ $HITS -eq 0 ] && ok "no known payload filenames found"
@@ -90,6 +114,7 @@ for root in "${ROOTS[@]}"; do
   [ -d "$root" ] || continue
   while IFS= read -r f; do
     [ -z "$f" ] && continue
+    is_ignored "$f" && continue
     # truffle[h]og: the [h] is a one-char regex class so this script does not
     # itself contain the literal word, which other scanners flag as an IOC.
     if grep -lEi 'setup_bun|bun_environment|router_runtime|shai.?hulud|truffle[h]og' \
@@ -104,7 +129,9 @@ done
 for root in "${ROOTS[@]}"; do
   [ -d "$root" ] || continue
   while IFS= read -r f; do
-    [ -n "$f" ] && hit "worm bootstrap file: $f"
+    [ -n "$f" ] || continue
+    is_ignored "$f" && continue
+    hit "worm bootstrap file: $f"
   done < <(find "$root" \( "${PRUNE[@]}" \) -prune -o -type f \
              -path '*/.claude/setup.mjs' -print 2>/dev/null)
 done
@@ -112,11 +139,11 @@ done
 # ---------------------------------------------------------------------------
 hdr "3. May-2026 dead-man's-switch artifacts in \$HOME"
 for a in gh-token-monitor kitty-monitor; do
-  if find "$HOME" -maxdepth 3 -name "*${a}*" -print 2>/dev/null | grep -q .; then
-    find "$HOME" -maxdepth 3 -name "*${a}*" 2>/dev/null | while read -r f; do
-      hit "dead-man's-switch artifact: $f"
-    done
-  fi
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    is_ignored "$f" && continue
+    hit "dead-man's-switch artifact: $f"
+  done < <(find "$HOME" -maxdepth 3 -name "*${a}*" -print 2>/dev/null)
 done
 
 # ---------------------------------------------------------------------------
@@ -156,6 +183,7 @@ for root in "${ROOTS[@]}"; do
   while IFS= read -r m; do
     [ -z "$m" ] && continue
     case "$m" in *shai-hulud-check*) continue ;; esac   # don't flag this tool
+    is_ignored "${m%%:*}" && continue                   # m is file:line:match
     warn "$m"
   done < <(grep -rInE "$PATTERNS" "$root" "${EXCLUDES[@]}" 2>/dev/null | head -40)
 done
@@ -184,8 +212,10 @@ if [ "$RUN_DETECTOR" -eq 0 ]; then
 elif ! command -v git >/dev/null 2>&1; then
   warn "git not installed — cannot clone/update the detector; skipping"
 else
-  # Clone on first run, otherwise fast-forward to the latest package list.
+  # 1. CLEAN + 2. UPDATE: clone on first run, else restore the checkout (we may
+  #    have deleted test-cases/ last run — see below) and fast-forward.
   if [ -d "$DETECTOR_DIR/.git" ]; then
+    git -C "$DETECTOR_DIR" checkout -- . 2>/dev/null
     if git -C "$DETECTOR_DIR" pull --ff-only --quiet 2>/dev/null; then
       ok "detector updated ($DETECTOR_DIR)"
     else
@@ -201,16 +231,42 @@ else
   fi
 
   DETECTOR_SH="$DETECTOR_DIR/shai-hulud-detector.sh"
-  if [ -x "$DETECTOR_SH" ] || [ -f "$DETECTOR_SH" ]; then
+
+  # 3. CHECK whether Cobenian/shai-hulud-detect PR #129 ("add ignore-list
+  #    support") has landed in this checkout, and 4. act accordingly.
+  #
+  #    We test the pulled script itself rather than querying the PR's state on
+  #    GitHub: what matters is whether THIS checkout has the feature (a `gh`
+  #    query could report "merged" while our clone is stale or offline), and
+  #    this needs no gh/auth/network.
+  #
+  #    PR #129 merged  -> detector has a native --ignore flag; pass it the clone
+  #                       dir so its own files are suppressed. Nothing deleted.
+  #    PR #129 not in  -> the detector ships intentional malware fixtures under
+  #                       test-cases/ and does a plain recursive scan (no
+  #                       hidden-dir/own-repo pruning outside --bulk), so it
+  #                       would flag them as real HIGH-RISK hits. Delete
+  #                       test-cases/ first — it is not used at runtime (the
+  #                       detector references it only in comments).
+  DETECTOR_IGNORE=()
+  if [ -f "$DETECTOR_SH" ] && grep -qE -- '--ignore(-file)?\b' "$DETECTOR_SH"; then
+    DETECTOR_IGNORE=( --ignore "$DETECTOR_DIR" )
+    ok "detector supports --ignore (PR #129 landed) — no test-cases/ pruning needed"
+  elif [ -d "$DETECTOR_DIR" ]; then
+    rm -rf "$DETECTOR_DIR/test-cases"
+    echo "  PR #129 not in this checkout — pruned test-cases/ to avoid false hits"
+  fi
+
+  if [ -f "$DETECTOR_SH" ]; then
     for root in "${ROOTS[@]}"; do
       [ -d "$root" ] || continue
       echo
       echo "  --- detector scan: $root ---"
-      if bash "$DETECTOR_SH" "$root" --check-host; then
-        :
+      if [ ${#DETECTOR_IGNORE[@]} -gt 0 ]; then
+        bash "$DETECTOR_SH" "$root" --check-host "${DETECTOR_IGNORE[@]}"
       else
-        warn "detector reported findings for $root — review its output above"
-      fi
+        bash "$DETECTOR_SH" "$root" --check-host
+      fi || warn "detector reported findings for $root — review its output above"
     done
   elif [ -d "$DETECTOR_DIR/.git" ]; then
     warn "detector script not found at $DETECTOR_SH — repo layout may have changed"
