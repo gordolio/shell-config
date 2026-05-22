@@ -192,6 +192,7 @@ __tool_add_path "bun-bin" "$BUN_INSTALL/bin" path prepend
 
 # opencode
 __tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
+__tool_check_cmd "opencode" opencode opencode
 
 # claude code statusline dependencies
 __tool_check_cmd "claude" claude claude
@@ -199,3 +200,15 @@ __tool_check_cmd "jq" jq claude
 __tool_check_cmd "curl" curl claude
 __tool_check_cmd "mitmproxy" mitmdump claude
 __tool_check_path "claude-statusline" "$HOME/src/shell-config/claude/statusline-command.sh" claude file
+
+# codex statusline configuration
+__tool_check_cmd "codex" codex codex
+__tool_check_path "codex-statusline" "$HOME/src/shell-config/codex/statusline.config.toml" codex file
+
+function codex {
+  if [[ -e "$HOME/.codex/statusline.config.toml" ]]; then
+    command codex --profile-v2 statusline "$@"
+  else
+    command codex "$@"
+  fi
+}

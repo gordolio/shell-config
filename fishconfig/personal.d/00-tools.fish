@@ -180,6 +180,8 @@ function __check_setup_symlinks
   __tool_check_symlink ".hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" $category
   __tool_check_symlink ".claude/hooks/gh-allowlist.py" "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" $category
   __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" $category
+  __tool_check_symlink ".codex/statusline.config.toml" "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" $category
+  __tool_check_symlink ".config/opencode/tui.json" "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" $category
 
   # iTerm2 uses defaults instead of a symlink
   set -l iterm_prefs_folder (defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
@@ -252,6 +254,8 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
   __fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" ".claude/hooks/gh-allowlist.py"
   __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
+  __fix_symlink "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" ".codex/statusline.config.toml"
+  __fix_symlink "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" ".config/opencode/tui.json"
 
   # iTerm2: configure via defaults
   echo ""

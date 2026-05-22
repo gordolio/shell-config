@@ -1,0 +1,6 @@
+{
+  "vim_enter_submit": true,
+  "keybinds": {
+    "input_newline": "shift+return,ctrl+return,alt+return,ctrl+j"
+  }
+}
