@@ -143,6 +143,22 @@ else
     model_display="${CYAN}${model_name}${RESET}"
 fi
 
+# ── Vim mode chip ─────────────────────────────────────────────────────────────
+# The statusline JSON exposes .vim.mode only while vim mode is enabled, and
+# Claude Code re-runs this script when the mode toggles (debounced ~300ms).
+vim_mode=$(echo "$input" | jq -r '.vim.mode // empty' 2>/dev/null)
+vim_chip=""
+if [ -n "$vim_mode" ]; then
+    DARK_FG=$'\e[38;5;235m'
+    case "$vim_mode" in
+        NORMAL)   vim_bg=$'\e[48;5;71m' ;;
+        INSERT)   vim_bg=$'\e[48;5;39m' ;;
+        VISUAL*)  vim_bg=$'\e[48;5;208m' ;;
+        *)        vim_bg=$'\e[48;5;62m' ;;
+    esac
+    vim_chip="${vim_bg}${DARK_FG}${BOLD} ${vim_mode} ${RESET}"
+fi
+
 # Wrap-aware join: splits segments across lines at bar boundaries if too wide
 # Usage: wrap_segments <first_line_reserve> segment1 segment2 ...
 wrap_segments() {
@@ -180,7 +196,9 @@ wrap_segments() {
 }
 
 # ── LINE 1 ────────────────────────────────────────────────────────────────────
-segments=("${model_display}" "${PURPLE}${username}${RESET}" "${PINK}${path_basename}${RESET}")
+segments=()
+[ -n "$vim_chip" ] && segments+=("${vim_chip}")
+segments+=("${model_display}" "${PURPLE}${username}${RESET}" "${PINK}${path_basename}${RESET}")
 [ -n "$git_info" ] && segments+=("${git_info}")
 segments+=("${CYAN}${current_time}${RESET}")
 [ -n "$claude_version" ] && segments+=("${DIM_LAVENDER}v${claude_version}${RESET}")
