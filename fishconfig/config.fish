@@ -96,7 +96,10 @@ __tool_source "google-cloud-sdk" "/opt/homebrew/share/google-cloud-sdk/path.fish
 # opencode
 __tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
 
+function opencode
+  command ocv $argv
+end
+
 # Added by LM Studio CLI (lms)
 __tool_add_path "lm-studio-bin" "$HOME/.cache/lm-studio/bin" path append
 # End of LM Studio CLI section
-
