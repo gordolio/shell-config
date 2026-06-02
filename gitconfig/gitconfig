@@ -59,6 +59,7 @@
   make-patch = "!bash -c \"cd ${GIT_PREFIX};git add .;git commit -m uncommited; git format-patch HEAD~1; git reset HEAD~1\""
   difftool-all = difftool --tool=bc3 --dir-diff --no-symlinks
   diff-ignore-commas = "!f() { git diff --no-index --word-diff \"$1\" <(sed 's/,$//' \"$2\") <(sed 's/,$//' \"$3\"); }; f"
+  ai = "!~/src/shell-config/bin/git-ai.ts"
 
 [core]
   precomposeUnicode = true
@@ -121,3 +122,5 @@
 	recurse = true
 [fetch]
 	recurseSubmodules = on-demand
+[cz-ai]
+	cmd = cn -p --silent --config ~/.continue/git-ai-spark.yaml
