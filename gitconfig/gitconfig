@@ -123,4 +123,4 @@
 [fetch]
 	recurseSubmodules = on-demand
 [cz-ai]
-	cmd = cn -p --silent --config ~/.continue/git-ai-spark.yaml
+	cmd = ~/.asdf/installs/nodejs/24.14.1/bin/cn -p --silent --config ~/.continue/git-ai-spark.yaml

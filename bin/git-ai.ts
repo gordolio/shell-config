@@ -69,30 +69,45 @@ const adapterPathFromConfig = (): string => {
 
 type Prompter = (cz: unknown, commit: (m: string) => void) => void;
 
-// Resolve and load the adapter's prompter plus the inquirer it expects, both
-// from the repo's node_modules. Returns null if no commitizen stack is present.
-const loadCommitizen = (): {prompter: Prompter; inquirer: unknown} | null => {
-  let inquirer: unknown;
+// Bun resolves bare specifiers from its global install cache
+// (~/.bun/install/cache) when they're absent from the repo's node_modules — so a
+// non-Node repo (a dotfiles repo, say) would "find" inquirer and an adapter that
+// were never installed here, then crash when that cached inquirer's API doesn't
+// match what the adapter expects. Guard every lookup: accept a module only if it
+// physically resolves under repoRoot. A cache hit (or a miss) returns null, and
+// loadCommitizen then reports no stack so main() falls back to `git commit -e`.
+const resolveInRepo = (spec: string): string | null => {
   try {
-    inquirer = requireFromRepo('inquirer');
+    const resolved = requireFromRepo.resolve(spec);
+    return resolved.startsWith(repoRoot + path.sep) ? resolved : null;
   } catch {
     return null;
   }
+};
+
+// Resolve and load the adapter's prompter plus the inquirer it expects, both
+// from the repo's node_modules. Returns null if no commitizen stack is present.
+const loadCommitizen = (): {prompter: Prompter; inquirer: unknown} | null => {
+  const inquirerPath = resolveInRepo('inquirer');
+  if (!inquirerPath) return null;
+  const inquirer = requireFromRepo(inquirerPath);
   const configured = adapterPathFromConfig();
   const candidates = configured ? [configured] : ['cz-conventional-changelog'];
   for (const id of candidates) {
     // Try as a bare module name, then as a repo-relative path (covers a
     // configured "./node_modules/cz-customizable" or a local adapter file).
     for (const spec of [id, path.resolve(repoRoot, id)]) {
+      const resolved = resolveInRepo(spec);
+      if (!resolved) continue; // absent here (or only in Bun's cache) — skip
       try {
-        const mod = requireFromRepo(spec) as {
+        const mod = requireFromRepo(resolved) as {
           prompter?: Prompter;
           default?: {prompter?: Prompter};
         };
         const prompter = mod?.prompter ?? mod?.default?.prompter;
         if (typeof prompter === 'function') return {prompter, inquirer};
       } catch {
-        // not here — try the next candidate/spec
+        // present but failed to load — try the next candidate/spec
       }
     }
   }
@@ -197,7 +212,13 @@ const buildPrompt = (diff: string): string =>
     diff,
   ].join('\n');
 
-const runAi = (aiCmd: string, stream: boolean, prompt: string): Promise<string> =>
+// `ok` distinguishes a backend that produced a completion from one that failed
+// (couldn't spawn, or exited non-zero — e.g. an asdf shim with no node version,
+// an auth error, a bad config path). main() aborts on failure rather than
+// silently committing with empty defaults, which just looked like "(no subject)".
+type AiResult = {out: string; ok: boolean};
+
+const runAi = (aiCmd: string, stream: boolean, prompt: string): Promise<AiResult> =>
   new Promise(resolve => {
     const stop = startSpinner('Generating commit message...', stream);
     const child = spawn('/bin/sh', ['-c', aiCmd], {stdio: ['pipe', 'pipe', 'inherit']});
@@ -206,13 +227,21 @@ const runAi = (aiCmd: string, stream: boolean, prompt: string): Promise<string> 
       out += chunk;
       if (stream) process.stderr.write(chunk); // show thinking/output live
     });
-    child.on('error', () => {
-      stop('[ai failed] using empty defaults');
-      resolve('');
+    // `error` fires only when the backend can't be spawned at all (e.g. /bin/sh
+    // missing). A backend that runs but exits non-zero comes through `close`
+    // with a non-zero code — that's the case the old handler ignored.
+    child.on('error', err => {
+      stop(`[ai failed to start: ${err.message}]`);
+      resolve({out: '', ok: false});
     });
-    child.on('close', () => {
+    child.on('close', code => {
+      if (code !== 0) {
+        stop(`[ai backend exited ${code}] — see its output above`);
+        resolve({out, ok: false});
+        return;
+      }
       stop('Commit message ready.');
-      resolve(out);
+      resolve({out, ok: true});
     });
     child.stdin.write(prompt);
     child.stdin.end();
@@ -254,8 +283,19 @@ const main = async (): Promise<void> => {
   const stream = gitConfig('cz-ai.stream') === 'true';
   const verbose = gitConfig('cz-ai.verbose') === 'true';
 
-  const raw = await runAi(aiCmd, stream, buildPrompt(diff));
+  const {out: raw, ok} = await runAi(aiCmd, stream, buildPrompt(diff));
+  if (!ok) {
+    console.error(`\nBackend command failed: ${aiCmd}`);
+    console.error('Fix the backend (or update cz-ai.cmd), then retry. Nothing was committed.');
+    process.exit(1);
+  }
   const ai = parseDefaults(raw);
+  // A clean exit with nothing parseable (no type and no subject) means the
+  // backend ran but returned no usable JSON — warn instead of silently dropping
+  // into an unprefilled prompt that looks like the no-commitizen fallback.
+  if (!ai.type && !ai.subject) {
+    process.stderr.write('(backend returned no usable suggestion; defaults will be empty)\n');
+  }
   printDecision(ai, {verbose, raw});
 
   const cz = loadCommitizen();
