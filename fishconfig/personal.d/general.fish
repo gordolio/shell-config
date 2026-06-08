@@ -156,7 +156,7 @@ __tool_check_path "codex-statusline" "$HOME/src/shell-config/codex/statusline.co
 
 function codex
   if test -e "$HOME/.codex/statusline.config.toml"
-    command codex --profile-v2 statusline $argv
+    command codex --profile statusline $argv
   else
     command codex $argv
   end

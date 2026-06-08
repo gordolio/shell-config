@@ -114,6 +114,43 @@ const loadCommitizen = (): {prompter: Prompter; inquirer: unknown} | null => {
   return null;
 };
 
+const expandTilde = (p: string): string =>
+  p.startsWith('~/') ? path.join(os.homedir(), p.slice(2)) : p;
+
+// Does this repo launch commitizen from a prepare-commit-msg hook? If so, a
+// plain `git commit` already opens the adapter, so driving it in-process too
+// would prompt twice (and discard our message). We can't just trust one path —
+// git's hook can sit in a few places — so we scan every plausible location for a
+// commitizen invocation. When found, main() defers to the hook and prefills it
+// via CZ_* env vars instead of prompting in-process.
+const hasCommitizenPrepareHook = (): boolean => {
+  // <git-dir>/hooks is git's default, and also where a dispatcher hooksPath
+  // (e.g. a global core.hooksPath that chains to repo-local hooks) ends up.
+  // Derive it from the git dir directly — `git rev-parse --git-path hooks` would
+  // instead echo core.hooksPath when that's set, hiding the chained-to hook.
+  const gitDir = execSync('git rev-parse --absolute-git-dir', {encoding: 'utf8'}).trim();
+  const gitDirHooks = path.join(gitDir, 'hooks');
+  const candidates = new Set<string>([path.join(gitDirHooks, 'prepare-commit-msg')]);
+  // core.hooksPath, if set, is where git looks instead (git expands a leading ~/,
+  // and resolves a relative value against the work tree root).
+  const configured = gitConfig('core.hooksPath');
+  if (configured) {
+    const dir = path.resolve(repoRoot, expandTilde(configured));
+    candidates.add(path.join(dir, 'prepare-commit-msg'));
+    // husky v9 keeps thin wrappers in `.husky/_` that source the real hook in `.husky/`.
+    if (path.basename(dir) === '_') candidates.add(path.join(dir, '..', 'prepare-commit-msg'));
+  }
+  const invokesCz = /\b(cz|git-cz|commitizen)\b/;
+  for (const f of candidates) {
+    try {
+      if (invokesCz.test(fs.readFileSync(f, 'utf8'))) return true;
+    } catch {
+      // hook absent at this path — try the next
+    }
+  }
+  return false;
+};
+
 // Wrap inquirer so the adapter's questions get our AI values as their defaults.
 // We never assume a fixed field set: we intercept the questions array the
 // adapter passes to .prompt() and patch by question `name`, so custom adapters
@@ -267,6 +304,26 @@ const assembleMessage = (ai: AiDefaults): string => {
   return (ai.body ? `${header}\n\n${ai.body}` : header) + '\n';
 };
 
+// Commit by letting the repo's prepare-commit-msg hook drive commitizen, but
+// seed the adapter's prompts with our AI values via the CZ_* env vars that
+// cz-conventional-changelog / cz-customizable read as defaults. Empty values are
+// falsy to those adapters, so they fall through to the adapter's own default.
+// Plain `git commit` (no -F) so the hook owns the message; stdio inherited so
+// the hook's `exec < /dev/tty` prompt reaches the terminal. Returns git's status.
+const commitViaHook = (ai: AiDefaults): number => {
+  const r = spawnSync('git', ['commit'], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      CZ_TYPE: ai.type,
+      CZ_SCOPE: ai.scope,
+      CZ_SUBJECT: ai.subject,
+      CZ_BODY: ai.body,
+    },
+  });
+  return r.status ?? 0;
+};
+
 const main = async (): Promise<void> => {
   const diff = execSync('git diff --cached', {encoding: 'utf8', maxBuffer: 64 * 1024 * 1024});
   if (!diff.trim()) {
@@ -297,6 +354,13 @@ const main = async (): Promise<void> => {
     process.stderr.write('(backend returned no usable suggestion; defaults will be empty)\n');
   }
   printDecision(ai, {verbose, raw});
+
+  // Repo runs commitizen from a prepare-commit-msg hook: defer to it (a plain
+  // `git commit` triggers the prompt once, prefilled via CZ_*), rather than
+  // driving the adapter in-process and getting prompted a second time by the hook.
+  if (hasCommitizenPrepareHook()) {
+    process.exit(commitViaHook(ai));
+  }
 
   const cz = loadCommitizen();
   if (!cz) {

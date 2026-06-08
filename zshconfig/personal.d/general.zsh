@@ -211,7 +211,7 @@ __tool_check_path "codex-statusline" "$HOME/src/shell-config/codex/statusline.co
 
 function codex {
   if [[ -e "$HOME/.codex/statusline.config.toml" ]]; then
-    command codex --profile-v2 statusline "$@"
+    command codex --profile statusline "$@"
   else
     command codex "$@"
   fi

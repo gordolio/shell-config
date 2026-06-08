@@ -24,9 +24,9 @@ The `claude/` directory contains the statusline script for Claude Code.
 
 Codex CLI does not currently support Claude-style command-backed statusline scripts. Use Codex's built-in `[tui].status_line` item list instead.
 
-- `statusline.config.toml` — preferred compact Codex statusline items: model/reasoning, cwd, git branch, context remaining, and Codex version.
+- `statusline.config.toml` — preferred compact Codex statusline items: model/reasoning, cwd, git branch, context remaining, and Codex version. It also keeps TUI shortcut tooltips enabled and pins `Ctrl+T` as the transcript shortcut.
 - `ls-tools --fix` symlinks it to `~/.codex/statusline.config.toml`.
-- The shell config wraps `codex` as `command codex --profile-v2 statusline ...` when the profile file exists. This layers the repo-tracked statusline profile on top of the machine-local `~/.codex/config.toml` without taking ownership of auth/app/plugin/project-trust config.
+- The shell config wraps `codex` as `command codex --profile statusline ...` when the profile file exists. This layers the repo-tracked statusline profile on top of the machine-local `~/.codex/config.toml` without taking ownership of auth/app/plugin/project-trust config.
 
 ## OpenCode CLI
 

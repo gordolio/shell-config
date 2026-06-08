@@ -18,4 +18,6 @@ vimconfig/bundle/*
 fishconfig/conf.d/local.fish
 fishconfig/conf.d/*-local.fish
 fishconfig/personal.d/local.fish
+zshconfig/personal.d/local.zsh
+zshconfig/personal.d/*-local.zsh
 vimconfig/vimrc.local

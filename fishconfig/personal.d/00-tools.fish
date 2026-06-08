@@ -182,6 +182,11 @@ function __check_setup_symlinks
   __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" $category
   __tool_check_symlink ".codex/statusline.config.toml" "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" $category
   __tool_check_symlink ".config/opencode/tui.json" "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" $category
+  if test -e "$shell_config/op/npm.env"
+    __tool_check_symlink ".config/op/npm.env" "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" $category
+  else
+    __tool_check_path ".config/op/npm.env" "$HOME/.config/op/npm.env" secrets file
+  end
 
   # iTerm2 uses defaults instead of a symlink
   set -l iterm_prefs_folder (defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null)
@@ -256,6 +261,12 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
   __fix_symlink "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" ".codex/statusline.config.toml"
   __fix_symlink "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" ".config/opencode/tui.json"
+  if test -e "$shell_config/op/npm.env"
+    __fix_symlink "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" ".config/op/npm.env"
+  else
+    mkdir -p "$HOME/.config/op"
+    echo "⏭  "$__home_icon".config/op/npm.env (no repo-local op/npm.env to symlink)"
+  end
 
   # iTerm2: configure via defaults
   echo ""
