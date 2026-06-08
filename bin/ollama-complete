@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Read a prompt on stdin, print the model's completion on stdout via the ollama
+# HTTP API. A plain completion — no agent, no tools — unlike `cn -p`, which runs as
+# an agent: a capable model (e.g. qwen2.5-coder:7b) will try to *call* a tool such
+# as Bash to run `git commit` itself instead of answering with text. Also unlike
+# `ollama run`, the HTTP API doesn't leak terminal cursor codes into piped output.
+#
+# Used as `git ai`'s backend:
+#   git config --global cz-ai.cmd "~/src/shell-config/bin/ollama-complete qwen2.5-coder:7b"
+#
+# Usage: ollama-complete [model]   (default: $GIT_AI_MODEL, else qwen2.5-coder:7b)
+# Env:   OLLAMA_HOST    (default: http://192.168.0.159:11434 — the Spark box)
+#        GIT_AI_NUM_CTX (default: 16384 — see below)
+set -euo pipefail
+
+model="${1:-${GIT_AI_MODEL:-qwen2.5-coder:7b}}"
+host="${OLLAMA_HOST:-http://192.168.0.159:11434}"
+
+# num_ctx caps the context window. Left at the model default, qwen2.5-coder loads a
+# near-128K window whose KV cache balloons the footprint past VRAM, so ollama spills
+# layers to the CPU (slow). Capping it keeps the whole model on GPU. num_gpu 999
+# forces every layer onto the GPU. 16K holds the instructions + a normal commit's
+# diff; bump GIT_AI_NUM_CTX for very large diffs (at the cost of some CPU spill).
+num_ctx="${GIT_AI_NUM_CTX:-16384}"
+
+# jq -Rs slurps stdin as one raw string into the JSON body; curl -f fails loudly on
+# an HTTP error (e.g. model not pulled) so pipefail surfaces it as a non-zero exit.
+jq -Rs --arg model "$model" --argjson num_ctx "$num_ctx" \
+  '{model: $model, prompt: ., stream: false, options: {num_ctx: $num_ctx, num_gpu: 999}}' \
+  | curl -sf "$host/api/generate" -d @- \
+  | jq -r '.response'

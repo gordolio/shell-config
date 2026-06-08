@@ -176,14 +176,36 @@ const aiInquirer = (inquirer: unknown, ai: AiDefaults): unknown => {
   });
 };
 
+// The backend is told to emit each field between unique boundary markers
+// (=== CZ-TYPE ===, etc.) rather than JSON. Markers are far more robust for a small
+// local model: we slice each value out by its own markers, so anything outside them
+// (reasoning, prose, code fences, a `${…}` echoed from the diff) is ignored, and the
+// values need no escaping — quotes, braces, colons, and newlines all pass through.
+//
+// A value runs from its own marker to the next "=== CZ-… ===" marker (or end of
+// output, for the last field). The closing CZ-END marker just bounds the body.
+const section = (raw: string, name: string): string => {
+  const re = new RegExp(
+    `===\\s*CZ-${name}\\s*===([\\s\\S]*?)(?:===\\s*CZ-[A-Z]+\\s*===|$)`,
+    'i',
+  );
+  const m = raw.match(re);
+  if (!m) return '';
+  const val = m[1].trim();
+  // Drop an unfilled <placeholder> the model echoed instead of replacing.
+  return /^<.*>$/.test(val) ? '' : val;
+};
+
 const parseDefaults = (raw: string): AiDefaults => {
-  const out: AiDefaults = {type: '', scope: '', subject: '', body: ''};
-  const start = raw.indexOf('{');
-  const end = raw.lastIndexOf('}');
-  if (start === -1 || end === -1) return out;
-  try {
-    Object.assign(out, JSON.parse(raw.slice(start, end + 1)));
-  } catch {
+  const out: AiDefaults = {
+    type: section(raw, 'TYPE'),
+    scope: section(raw, 'SCOPE'),
+    subject: section(raw, 'SUBJECT'),
+    body: section(raw, 'BODY'),
+  };
+  // Markers present but nothing usable came out of them → flag the malformed case
+  // (distinct from "no markers at all", which main reports as no usable suggestion).
+  if (!out.type && !out.subject && /===\s*CZ-(TYPE|SUBJECT)\s*===/i.test(raw)) {
     process.stderr.write('(could not parse AI output; falling back to empty defaults)\n');
   }
   return out;
@@ -236,14 +258,23 @@ const startSpinner = (label: string, stream: boolean): ((done: string) => void) 
 const buildPrompt = (diff: string): string =>
   [
     'Generate a Conventional Commit message for the staged git diff below.',
-    'Respond with ONLY minified JSON, no prose and no code fences:',
-    '{"type":"feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert",' +
-      '"scope":"<short area>","subject":"<imperative, <=80 chars, no trailing period>",' +
-      '"body":"<optional longer explanation, or empty>"}',
+    'Output each field between the exact boundary markers shown — nothing outside',
+    'the markers, no prose or commentary, no code fences. Keep the marker lines',
+    'exactly as written and replace each <…> with the value:',
     '',
-    'For "scope": pick a short lowercase area/module name derived from the changed' +
-      ' files (a directory, package, or feature, e.g. "auth" or "parser"). Only use' +
-      ' "" if the change is genuinely repo-wide with no single area.',
+    '=== CZ-TYPE ===',
+    '<one of: feat fix docs style refactor perf test build ci chore revert>',
+    '=== CZ-SCOPE ===',
+    '<short lowercase area, or blank>',
+    '=== CZ-SUBJECT ===',
+    '<imperative, <=80 chars, no trailing period>',
+    '=== CZ-BODY ===',
+    '<optional longer explanation, or blank>',
+    '=== CZ-END ===',
+    '',
+    'For CZ-SCOPE: pick a short lowercase area/module name derived from the changed' +
+      ' files (a directory, package, or feature, e.g. "auth" or "parser"). Leave it' +
+      ' blank only if the change is genuinely repo-wide with no single area.',
     '',
     'Diff:',
     diff,
