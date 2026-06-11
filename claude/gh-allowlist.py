@@ -22,6 +22,7 @@ ALLOWED_SUBCOMMANDS = [
     ("issue", "list"),
     ("issue", "status"),
     ("repo", "view"),
+    ("repo", "list"),
     ("release", "view"),
     ("release", "list"),
     ("run", "view"),
