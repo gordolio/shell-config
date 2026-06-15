@@ -150,18 +150,6 @@ __tool_check_cmd "curl" curl claude
 __tool_check_cmd "mitmproxy" mitmdump claude
 __tool_check_path "claude-statusline" "$HOME/src/shell-config/claude/statusline-command.sh" claude file
 
-# codex statusline configuration
-__tool_check_cmd "codex" codex codex
-__tool_check_path "codex-statusline" "$HOME/src/shell-config/codex/statusline.config.toml" codex file
-
-function codex
-  if test -e "$HOME/.codex/statusline.config.toml"
-    command codex --profile statusline $argv
-  else
-    command codex $argv
-  end
-end
-
 alias spark 'ssh -t -L 5902:localhost:5902 gordolio@192.168.0.159 "tmux -CC new -A -s main"'
 
 fish_vi_key_bindings
