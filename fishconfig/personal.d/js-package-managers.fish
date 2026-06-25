@@ -20,15 +20,13 @@ __tool_check_cmd "pnpm" pnpm package-managers
 # round-trip on every run/dev/codegen.
 set -g __op_npm_auth_cmds install i ci add update up upgrade upgrade-interactive dedupe import dlx create fetch publish
 
+# Token names referenced by ~/.npmrc. Non-fetching commands only need these names
+# defined; the real values are resolved from 1Password for auth commands below.
+set -g __op_npm_token_vars GH_AUTH_TOKEN FA_AUTH_TOKEN
+
 function __op_run_npm_env
   set -l package_manager $argv[1]
   set -e argv[1]
-
-  # No env-file → nothing to inject; run unchanged.
-  if not test -f "$HOME/.config/op/npm.env"
-    command "$package_manager" $argv
-    return
-  end
 
   # The first non-flag argument is the subcommand (a bare `yarn` means install).
   set -l subcmd ""
@@ -39,19 +37,24 @@ function __op_run_npm_env
   end
   test -z "$subcmd"; and test "$package_manager" = yarn; and set subcmd install
 
-  if contains -- $subcmd $__op_npm_auth_cmds; and type -q op
+  if contains -- $subcmd $__op_npm_auth_cmds; and test -f "$HOME/.config/op/npm.env"; and type -q op
     command op run --env-file "$HOME/.config/op/npm.env" -- "$package_manager" $argv
   else
     # Inject blank values for the token names so ~/.npmrc's ${...} substitution
     # doesn't choke, then exec the real binary with the TTY preserved.
     set -l blank_env
-    while read -l line
-      set -l trimmed (string trim -- $line)
-      test -z "$trimmed"; and continue
-      string match -q '#*' -- $trimmed; and continue
-      set -l parts (string split -m1 '=' -- $line)
-      set -a blank_env "$parts[1]="
-    end < "$HOME/.config/op/npm.env"
+    for key in $__op_npm_token_vars
+      set -a blank_env "$key="
+    end
+    if test -f "$HOME/.config/op/npm.env"
+      while read -l line
+        set -l trimmed (string trim -- $line)
+        test -z "$trimmed"; and continue
+        string match -q '#*' -- $trimmed; and continue
+        set -l parts (string split -m1 '=' -- $line)
+        set -a blank_env "$parts[1]="
+      end < "$HOME/.config/op/npm.env"
+    end
     env $blank_env "$package_manager" $argv
   end
 end

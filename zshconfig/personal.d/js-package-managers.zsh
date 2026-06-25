@@ -23,15 +23,13 @@ __op_npm_auth_cmds=(
   dedupe import dlx create fetch publish
 )
 
+# Token names referenced by ~/.npmrc. Non-fetching commands only need these names
+# defined; the real values are resolved from 1Password for auth commands below.
+__op_npm_token_vars=(GH_AUTH_TOKEN FA_AUTH_TOKEN)
+
 function __op_run_npm_env {
   local package_manager=$1
   shift
-
-  # No env-file → nothing to inject; run unchanged.
-  if [[ ! -f "$HOME/.config/op/npm.env" ]]; then
-    command "$package_manager" "$@"
-    return
-  fi
 
   # The first non-flag argument is the subcommand (a bare `yarn` means install).
   local subcmd="" arg
@@ -47,17 +45,22 @@ function __op_run_npm_env {
     [[ "$subcmd" == "$c" ]] && { needs_auth=1; break; }
   done
 
-  if (( needs_auth )) && command -v op &>/dev/null; then
+  if (( needs_auth )) && [[ -f "$HOME/.config/op/npm.env" ]] && command -v op &>/dev/null; then
     command op run --env-file "$HOME/.config/op/npm.env" -- "$package_manager" "$@"
   else
     # Inject blank values for the token names so ~/.npmrc's ${...} substitution
     # doesn't choke, then exec the real binary with the TTY preserved.
     local -a blank_env
     local key _ref
-    while IFS='=' read -r key _ref; do
-      [[ -z "$key" || "$key" == '#'* ]] && continue
+    for key in $__op_npm_token_vars; do
       blank_env+=("$key=")
-    done < "$HOME/.config/op/npm.env"
+    done
+    if [[ -f "$HOME/.config/op/npm.env" ]]; then
+      while IFS='=' read -r key _ref; do
+        [[ -z "$key" || "$key" == '#'* ]] && continue
+        blank_env+=("$key=")
+      done < "$HOME/.config/op/npm.env"
+    fi
     env "${blank_env[@]}" "$package_manager" "$@"
   fi
 }
