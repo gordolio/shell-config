@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+install_dir="${YAAK_CLI_HOME:-$HOME/.local/share/yaak-cli}"
+
+info() { printf '\033[1;34m==> %s\033[0m\n' "$*"; }
+ok() { printf '\033[1;32m  ok %s\033[0m\n' "$*"; }
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm is required to install the Yaak CLI." >&2
+  exit 1
+fi
+
+run_npm() {
+  if [[ ! -f "$HOME/.config/op/npm.env" ]]; then
+    npm "$@"
+    return
+  fi
+
+  local -a blank_env=()
+  local key _ref
+  while IFS='=' read -r key _ref; do
+    [[ -z "$key" || "$key" == '#'* ]] && continue
+    blank_env+=("$key=")
+  done < "$HOME/.config/op/npm.env"
+
+  env "${blank_env[@]}" npm "$@"
+}
+
+mkdir -p "$install_dir"
+cd "$install_dir"
+
+if [[ ! -f package.json ]]; then
+  info "Initializing local Yaak CLI package at $install_dir"
+  run_npm init -y >/dev/null
+fi
+
+info "Installing/updating @yaakapp/cli locally"
+run_npm install @yaakapp/cli@latest
+
+ok "Yaak CLI installed at $install_dir/node_modules/.bin/yaak"
+ok "Open a new shell, or run: export PATH=\"$install_dir/node_modules/.bin:\$PATH\""
