@@ -121,12 +121,12 @@ function bugi --description "Upgrade selected outdated formulae/casks with fzf"
   set -l cask_status 0
 
   if test (count $formulas) -gt 0
-    command brew upgrade $formulas
+    command brew upgrade --yes $formulas
     set formula_status $status
   end
 
   if test (count $casks) -gt 0
-    command brew upgrade --cask $casks
+    command brew upgrade --yes --cask $casks
     set cask_status $status
   end
 

@@ -108,12 +108,12 @@ function bugi {
   local formula_status=0 cask_status=0
 
   if (( ${#formulas[@]} > 0 )); then
-    command brew upgrade "${formulas[@]}"
+    command brew upgrade --yes "${formulas[@]}"
     formula_status=$?
   fi
 
   if (( ${#casks[@]} > 0 )); then
-    command brew upgrade --cask "${casks[@]}"
+    command brew upgrade --yes --cask "${casks[@]}"
     cask_status=$?
   fi
 
