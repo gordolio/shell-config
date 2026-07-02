@@ -3,7 +3,7 @@ if not set -q YAAK_CLI_HOME
   set -gx YAAK_CLI_HOME "$HOME/.local/share/yaak-cli"
 end
 if not set -q YAAK_DATA_DIR
-  set -gx YAAK_DATA_DIR "$HOME/src/Documents/Yaak"
+  set -gx YAAK_DATA_DIR "$HOME/Library/Application Support/app.yaak.desktop"
 end
 __tool_add_path "yaak-cli" "$YAAK_CLI_HOME/node_modules/.bin" path prepend
 

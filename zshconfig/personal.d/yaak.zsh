@@ -1,6 +1,6 @@
 # Yaak CLI, installed locally to avoid global npm/asdf churn.
 export YAAK_CLI_HOME="${YAAK_CLI_HOME:-$HOME/.local/share/yaak-cli}"
-export YAAK_DATA_DIR="${YAAK_DATA_DIR:-$HOME/src/Documents/Yaak}"
+export YAAK_DATA_DIR="${YAAK_DATA_DIR:-$HOME/Library/Application Support/app.yaak.desktop}"
 __tool_add_path "yaak-cli" "$YAAK_CLI_HOME/node_modules/.bin" path prepend
 
 function yaak {
