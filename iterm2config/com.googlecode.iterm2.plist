@@ -43,7 +43,7 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 	<key>AutoHideTmuxClientSession</key>
 	<false/>
 	<key>CheckTestRelease</key>
-	<true/>
+	<false/>
 	<key>ClaudeCodeWorkgroupUpsellSuppressed</key>
 	<true/>
 	<key>ClickToSelectCommand</key>
