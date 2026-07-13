@@ -50,18 +50,22 @@ function __op_run_npm_env {
   else
     # Inject blank values for the token names so ~/.npmrc's ${...} substitution
     # doesn't choke, then exec the real binary with the TTY preserved.
-    local -a blank_env
-    local key _ref
+    local -a runtime_env
+    local key value
     for key in $__op_npm_token_vars; do
-      blank_env+=("$key=")
+      runtime_env+=("$key=")
     done
     if [[ -f "$HOME/.config/op/npm.env" ]]; then
-      while IFS='=' read -r key _ref; do
+      while IFS='=' read -r key value; do
         [[ -z "$key" || "$key" == '#'* ]] && continue
-        blank_env+=("$key=")
+        if [[ "$value" == op://* ]]; then
+          runtime_env+=("$key=")
+        else
+          runtime_env+=("$key=$value")
+        fi
       done < "$HOME/.config/op/npm.env"
     fi
-    env "${blank_env[@]}" "$package_manager" "$@"
+    env "${runtime_env[@]}" "$package_manager" "$@"
   fi
 }
 

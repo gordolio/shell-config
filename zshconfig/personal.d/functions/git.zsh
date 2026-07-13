@@ -8,10 +8,14 @@
 function __git_with_npm_env {
   if [[ -f "$HOME/.config/op/npm.env" ]] && command -v op &>/dev/null; then
     local -a npm_env
-    local key ref
-    while IFS='=' read -r key ref; do
+    local key value
+    while IFS='=' read -r key value; do
       [[ -z "$key" || "$key" == '#'* ]] && continue
-      npm_env+=("$key=$(command op read "$ref")")
+      if [[ "$value" == op://* ]]; then
+        npm_env+=("$key=$(command op read "$value")")
+      else
+        npm_env+=("$key=$value")
+      fi
     done < "$HOME/.config/op/npm.env"
     env "${npm_env[@]}" git "$@"
   else

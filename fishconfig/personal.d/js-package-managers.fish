@@ -42,9 +42,9 @@ function __op_run_npm_env
   else
     # Inject blank values for the token names so ~/.npmrc's ${...} substitution
     # doesn't choke, then exec the real binary with the TTY preserved.
-    set -l blank_env
+    set -l runtime_env
     for key in $__op_npm_token_vars
-      set -a blank_env "$key="
+      set -a runtime_env "$key="
     end
     if test -f "$HOME/.config/op/npm.env"
       while read -l line
@@ -52,10 +52,14 @@ function __op_run_npm_env
         test -z "$trimmed"; and continue
         string match -q '#*' -- $trimmed; and continue
         set -l parts (string split -m1 '=' -- $line)
-        set -a blank_env "$parts[1]="
+        if string match -q 'op://*' -- $parts[2]
+          set -a runtime_env "$parts[1]="
+        else
+          set -a runtime_env "$parts[1]=$parts[2]"
+        end
       end < "$HOME/.config/op/npm.env"
     end
-    env $blank_env "$package_manager" $argv
+    env $runtime_env "$package_manager" $argv
   end
 end
 

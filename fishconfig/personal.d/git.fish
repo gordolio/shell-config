@@ -15,7 +15,10 @@ function __git_with_npm_env
       string match -q '#*' -- (string trim -- $line); and continue
       set -l parts (string split -m1 '=' -- $line)
       test (count $parts) -ge 2; or continue
-      set -l val (command op read "$parts[2]")
+      set -l val $parts[2]
+      if string match -q 'op://*' -- $val
+        set val (command op read "$val")
+      end
       set -a npm_env "$parts[1]=$val"
     end < "$HOME/.config/op/npm.env"
     env $npm_env git $argv
