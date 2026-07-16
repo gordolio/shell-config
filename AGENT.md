@@ -20,6 +20,15 @@ The `claude/` directory contains the statusline script for Claude Code.
 
 - `statusline-command.sh` — Claude Code statusline script that displays the vim-mode chip, model, user, path, git info, time, version, and context/usage dot bars. Uses data from Claude Code's statusline JSON input (no external API calls needed).
 
+## Claude Code through Codex (`claudex`)
+
+`claudex` runs the normal Claude Code harness against a local CLIProxyAPI instance authenticated with Codex OAuth. Plain `claude` remains unchanged.
+
+- Install with `brew install cliproxyapi` and authenticate with `cliproxyapi -codex-login`.
+- Before starting the service, configure `host: "127.0.0.1"` and a generated `api-keys` entry (for example, from `openssl rand -hex 24`) in `$(brew --prefix)/etc/cliproxyapi.conf`; then run `brew services start cliproxyapi`.
+- Put the same local API key in `~/.config/op/cliproxyapi.env`. Literal values and `op://` references are both supported; set `CLIPROXY_OP_ACCOUNT` when more than one 1Password account is available. See `op/cliproxyapi.env.example`.
+- The zsh/fish wrappers enable gateway model discovery and the effort UI. They intentionally do not pin a model; select one with `/model` or pass `--model` to `claudex`.
+
 ## Codex Statusline (`codex/`)
 
 Codex CLI does not currently support Claude-style command-backed statusline scripts. Use Codex's built-in `[tui].status_line` item list instead.
