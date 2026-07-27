@@ -10,8 +10,10 @@
 // message itself and opening `git commit -e` with it prefilled in the editor.
 //
 // Backend is required — a filter that reads the prompt on stdin and prints the
-// completion on stdout (no default; aborts if unset):
-//   git config --global cz-ai.cmd "cn -p"                      (Continue CLI)
+// completion on stdout (no default; aborts if unset). The tracked gitconfig
+// points cz-ai.cmd at bin/git-ai-backend, which picks ollama/codex/claude per
+// machine via cz-ai.backend (set in ~/.gitconfig.local, not tracked — see
+// git-ai-backend). Any other filter command also works directly, e.g.:
 //   git config --global cz-ai.cmd "ollama run qwen2.5-coder:7b"
 // Show the model's reasoning live (thinking models):
 //   git config --global cz-ai.stream true
@@ -286,9 +288,20 @@ const buildPrompt = (diff: string): string =>
 // silently committing with empty defaults, which just looked like "(no subject)".
 type AiResult = {out: string; ok: boolean};
 
+// Label the spinner with the backend actually in use. `cz-ai.backend` (set when
+// cz-ai.cmd points at bin/git-ai-backend) is the readable name (ollama/codex/
+// claude); otherwise fall back to the configured command's own executable name,
+// so a direct `cz-ai.cmd` (e.g. "cn -p") still shows something meaningful.
+const backendLabel = (aiCmd: string): string => {
+  const backend = gitConfig('cz-ai.backend');
+  if (backend) return backend;
+  const first = aiCmd.trim().split(/\s+/)[0] ?? aiCmd;
+  return first.split('/').pop() || first;
+};
+
 const runAi = (aiCmd: string, stream: boolean, prompt: string): Promise<AiResult> =>
   new Promise(resolve => {
-    const stop = startSpinner('Generating commit message...', stream);
+    const stop = startSpinner(`Generating commit message via ${backendLabel(aiCmd)}...`, stream);
     const child = spawn('/bin/sh', ['-c', aiCmd], {stdio: ['pipe', 'pipe', 'inherit']});
     let out = '';
     child.stdout.on('data', chunk => {

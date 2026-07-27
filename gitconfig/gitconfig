@@ -123,4 +123,4 @@
 [fetch]
 	recurseSubmodules = on-demand
 [cz-ai]
-	cmd = ~/src/shell-config/bin/ollama-complete qwen2.5-coder:7b
+	cmd = ~/src/shell-config/bin/git-ai-backend

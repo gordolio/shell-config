@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Dispatch `git ai`'s backend (a stdin-in/stdout-out completion filter) to
+# ollama, codex, or claude, chosen by `cz-ai.backend`. This script is what
+# `cz-ai.cmd` points at in the shared, tracked gitconfig, so the same line
+# works on every machine; the actual choice of backend is machine-local
+# (personal box: no Claude access, so ollama or codex; work box: company
+# Claude Code seat, so claude is fine too) and lives outside the tracked repo.
+#
+# Configure per machine, e.g.:
+#   git config --file ~/.gitconfig.local cz-ai.backend ollama
+#   git config --file ~/.gitconfig.local cz-ai.backend codex
+#   git config --file ~/.gitconfig.local cz-ai.backend claude
+#
+# GIT_AI_BACKEND env var overrides cz-ai.backend for a one-off run.
+set -euo pipefail
+
+bin_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+backend="${GIT_AI_BACKEND:-$(git config --get cz-ai.backend || true)}"
+
+case "$backend" in
+  ollama)
+    # See ollama-complete for model/host/context-window overrides.
+    exec "$bin_dir/ollama-complete" "${GIT_AI_MODEL:-qwen2.5-coder:7b}"
+    ;;
+  codex)
+    # --sandbox read-only: this is a text-completion call, not an agent task —
+    # it should never need to touch the filesystem. --ephemeral/--ignore-user-config
+    # keep it stateless. Stderr carries codex's session banner, not the
+    # completion (that's on stdout), so it's dropped to keep it out of the way.
+    exec codex exec --ephemeral --ignore-user-config --sandbox read-only --color never - 2>/dev/null
+    ;;
+  claude)
+    # No --bare: it forces auth to ANTHROPIC_API_KEY/apiKeyHelper only (OAuth
+    # and keychain are never read), which breaks a normal OAuth-logged-in
+    # session (e.g. a company seat). --disallowedTools '*' matches codex's
+    # --sandbox read-only above: no tool use, just the model's text reply on
+    # stdout.
+    if [[ -n "${GIT_AI_CLAUDE_MODEL:-}" ]]; then
+      exec claude -p --disallowedTools '*' --model "$GIT_AI_CLAUDE_MODEL"
+    fi
+    exec claude -p --disallowedTools '*'
+    ;;
+  '')
+    echo 'cz-ai.backend is not set. Configure one (per machine, in ~/.gitconfig.local):' >&2
+    echo '  git config --file ~/.gitconfig.local cz-ai.backend ollama|codex|claude' >&2
+    exit 1
+    ;;
+  *)
+    echo "cz-ai.backend '$backend' not recognized (expected ollama, codex, or claude)" >&2
+    exit 1
+    ;;
+esac
