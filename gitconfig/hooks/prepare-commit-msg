@@ -1,6 +1,16 @@
 #!/bin/bash
+GIT_DIR_PATH="$(git rev-parse --git-dir)"
+
+# Don't chain during a replay: there's no message to author, and an interactive
+# local hook (commitizen's `exec < /dev/tty`) blocks forever when a wrapper like
+# `gh stack rebase` owns the terminal.
+if [ -d "$GIT_DIR_PATH/rebase-merge" ] || [ -d "$GIT_DIR_PATH/rebase-apply" ] ||
+  [ -f "$GIT_DIR_PATH/MERGE_HEAD" ] || [ -f "$GIT_DIR_PATH/CHERRY_PICK_HEAD" ]; then
+  exit 0
+fi
+
 # Chain to repo-local hook if it exists
-LOCAL_HOOK="$(git rev-parse --git-dir)/hooks/$(basename "$0")"
+LOCAL_HOOK="$GIT_DIR_PATH/hooks/$(basename "$0")"
 if [ -x "$LOCAL_HOOK" ]; then
   exec "$LOCAL_HOOK" "$@"
 fi

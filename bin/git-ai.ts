@@ -145,7 +145,15 @@ const hasCommitizenPrepareHook = (): boolean => {
   const invokesCz = /\b(cz|git-cz|commitizen)\b/;
   for (const f of candidates) {
     try {
-      if (invokesCz.test(fs.readFileSync(f, 'utf8'))) return true;
+      // Strip full-line comments first: our own tracked global hook mentions
+      // "commitizen" in a comment explaining unrelated behavior, which would
+      // otherwise false-positive here and make every repo look cz-enabled.
+      const code = fs
+        .readFileSync(f, 'utf8')
+        .split('\n')
+        .filter(line => !/^\s*#/.test(line))
+        .join('\n');
+      if (invokesCz.test(code)) return true;
     } catch {
       // hook absent at this path — try the next
     }
