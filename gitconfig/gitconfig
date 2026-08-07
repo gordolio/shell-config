@@ -99,6 +99,7 @@
   ff = only
   default = current
   autoSetupRemote = true
+  recurseSubmodules = no
 
 [checkout]
   defaultRemote = origin
