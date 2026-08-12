@@ -93,13 +93,6 @@ __tool_add_path "asdf-shims" "$HOME/.asdf/shims" path prepend
 # The next line updates PATH for the Google Cloud SDK.
 __tool_source "google-cloud-sdk" "/opt/homebrew/share/google-cloud-sdk/path.fish.inc" integration
 
-# opencode
-__tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
-
-function opencode
-  command ocv $argv
-end
-
 # Added by LM Studio CLI (lms)
 __tool_add_path "lm-studio-bin" "$HOME/.cache/lm-studio/bin" path append
 # End of LM Studio CLI section

@@ -137,11 +137,6 @@ __tool_add_path "pipx-bin" "$HOME/.local/bin" path append
 
 # opencode
 __tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
-__tool_check_cmd "ocv" ocv opencode
-
-function opencode
-  command ocv $argv
-end
 
 # claude code statusline dependencies
 __tool_check_cmd "claude" claude claude

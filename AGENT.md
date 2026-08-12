@@ -53,7 +53,7 @@ OpenCode config notes:
 
 - Global config lives at `~/.config/opencode/opencode.json`; TUI config lives at `~/.config/opencode/tui.json`.
 - Project config is `opencode.json` at the repo root and is merged with global config, not a full replacement.
-- `opencode/tui.json` is symlinked to `~/.config/opencode/tui.json` by `ls-tools --fix`; it includes opencode-vim's `vim_enter_submit` setting so Enter submits from vim insert mode.
+- `opencode/tui.json` is symlinked to `~/.config/opencode/tui.json` by `ls-tools --fix`.
 - This repo's `opencode.json` includes `AGENT.md` as an instruction file so OpenCode gets the same project guidance without duplicating it into `AGENTS.md`.
 - OpenCode does not currently expose a configurable statusline or command-backed statusline hook. Use `tui.json` for supported TUI settings only; do not add statusline keys unless they appear in `https://opencode.ai/tui.json`.
 - OpenCode reads `AGENTS.md`; `/init` can generate one, but this repo already maintains `AGENT.md` for Codex-specific notes and should use `AGENTS.md` only if OpenCode needs project-facing instructions.
