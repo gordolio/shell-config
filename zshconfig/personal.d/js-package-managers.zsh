@@ -31,6 +31,15 @@ function __op_run_npm_env {
   local package_manager=$1
   shift
 
+  # Refuse destructive Prisma commands aimed at a non-local database: the target comes
+  # from the repo's .env rather than the command line, so a stale .env silently points
+  # a migration at staging. See bin/prisma-target-guard.pl for the rules and the
+  # PRISMA_GUARD_ALLOW_REMOTE override.
+  local db_guard="$HOME/src/shell-config/bin/prisma-target-guard.pl"
+  if [[ -x "$db_guard" ]]; then
+    "$db_guard" "$package_manager" "$@" || return 1
+  fi
+
   # The first non-flag argument is the subcommand (a bare `yarn` means install).
   local subcmd="" arg
   for arg in "$@"; do
@@ -79,4 +88,15 @@ function yarn {
 
 function pnpm {
   __op_run_npm_env pnpm "$@"
+}
+
+# npx is deliberately not routed through __op_run_npm_env: `prisma` is not in the auth
+# command list, so it would get blank registry tokens and break `npx @latermedia/...`.
+# It only needs the Prisma guard, which refuses `npx prisma` outright.
+function npx {
+  local db_guard="$HOME/src/shell-config/bin/prisma-target-guard.pl"
+  if [[ -x "$db_guard" ]]; then
+    "$db_guard" npx "$@" || return 1
+  fi
+  command npx "$@"
 }
