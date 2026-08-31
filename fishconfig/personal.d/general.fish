@@ -16,6 +16,14 @@ set -x PAGER (which less)" -X -F"
 __tool_add_path "pyenv-bin" "$HOME/.pyenv/bin" path prepend
 
 __tool_add_path "cargo-bin" "$HOME/.cargo/bin" path append
+__tool_add_path "libpq-bin" "/opt/homebrew/opt/libpq/bin" path append
+__tool_add_path "node-22-bin" "/opt/homebrew/opt/node@22/bin" path append
+__tool_add_path "mysql-client-8-bin" "/opt/homebrew/opt/mysql-client@8.0/bin" path append
+__tool_add_path "mysql-5-7-bin" "/opt/homebrew/opt/mysql@5.7/bin" path append
+__tool_add_path "mysql-client-5-7-bin" "/opt/homebrew/opt/mysql-client@5.7/bin" path append
+__tool_add_path "chromium-depot-tools" "$HOME/src/chromium/depot_tools" path append
+__tool_add_path "binutils-bin" "/opt/homebrew/opt/binutils/bin" path append
+__tool_add_path "fzf-bin" "/opt/homebrew/opt/fzf/bin" path append
 if __tool_add_path "mysql-homebrew" "/opt/homebrew/mysql/bin" path append
 else if __tool_add_path "mysql-client-homebrew" "/opt/homebrew/opt/mysql-client/bin" path append
 else if __tool_add_path "mysql-local" "/usr/local/mysql/bin" path append

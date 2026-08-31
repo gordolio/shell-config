@@ -109,11 +109,6 @@ if __tool_check_cmd "pyenv" pyenv lang-managers; then
   fi
 fi
 
-# rbenv initialization
-if __tool_check_cmd "rbenv" rbenv lang-managers; then
-  eval "$(rbenv init -)"
-fi
-
 # Vi mode
 bindkey -v
 export KEYTIMEOUT=1
