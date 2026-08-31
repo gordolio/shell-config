@@ -3,25 +3,32 @@
 # scripts sourced at startup (iTerm2's fish integration calls `grep -cvE`;
 # nothing similar found in its zsh integration, but harden the same way here
 # since this wraps grep for every caller, not just interactive typing):
-# only -r/-R, -i, -I, -n, -v, -h, -E, -c, -l, -L, -o, -w, -x, -q, -s ever
-# appear, bundled or not. -r/-R/-I/-E are dropped: rg recurses and skips
-# binaries by default, and its regex is already ERE-like, so none of them are
-# needed -- and passing them through would be actively wrong, since rg's
-# -r/-E each consume the next argument as a value (--replace/--encoding), and
-# rg's -I means --no-filename, not "ignore binary". -h is translated to rg's
-# -I (--no-filename) since rg's own -h is --help. The rest carry the same
-# meaning in both tools. Bundled short flags (e.g. -cvE) are expanded to
+# human-authored history uses -r/-i/-I/-n/-v/-E/-O. The startup call and the
+# established compatibility set additionally cover -R/-h/-c/-l/-L/-o/-w/-x/
+# -q/-s. -r/-I/-E/-O are dropped because rg already
+# recurses, skips binaries, uses regexes, and follows explicitly named symlinks
+# by default. grep's -L becomes --files-without-match; grep's -s becomes
+# --no-messages; and grep's -h becomes rg's -I/--no-filename. The others have
+# same meaning. Bundled short flags (e.g. -cvE) are expanded to
 # individual flags first, but ONLY when every letter in the bundle is one of
 # the ones above -- an unrecognized bundle is passed through untouched so rg
 # fails loudly on it instead of being silently misinterpreted.
 # Use `command grep` for the real grep.
 if __tool_check_cmd "ripgrep" rg search-tools; then
   grep() {
-    local known_flags="rRiInvhElLowxqsc"
+    local known_flags="rRiInvhElLoOwxqsc"
     local -a flat=()
     local a body c
-    local -i i ok
+    local -i i ok options_done=0
     for a in "$@"; do
+      if (( options_done )); then
+        flat+=("$a")
+        continue
+      elif [[ "$a" == -- ]]; then
+        options_done=1
+        flat+=("$a")
+        continue
+      fi
       if [[ "$a" =~ ^-[A-Za-z][A-Za-z]+$ ]]; then
         body="${a#-}"
         ok=1
@@ -39,10 +46,21 @@ if __tool_check_cmd "ripgrep" rg search-tools; then
       flat+=("$a")
     done
     local -a out=()
+    options_done=0
     for a in "${flat[@]}"; do
+      if (( options_done )); then
+        out+=("$a")
+        continue
+      elif [[ "$a" == -- ]]; then
+        options_done=1
+        out+=("$a")
+        continue
+      fi
       case "$a" in
-        -r|-R|-I|-E) ;;
+        -r|-R|-I|-E|-O) ;;
         -h) out+=(-I) ;;
+        -L) out+=(--files-without-match) ;;
+        -s) out+=(--no-messages) ;;
         *) out+=("$a") ;;
       esac
     done
