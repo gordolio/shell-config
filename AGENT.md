@@ -38,6 +38,24 @@ Codex CLI does not currently support Claude-style command-backed statusline scri
 - `ls-tools` checks whether `~/.codex/config.toml` defines blank `GH_AUTH_TOKEN` and `FA_AUTH_TOKEN` values for Codex tool-runner child processes; `ls-tools --fix` adds those defaults when missing.
 - The shell config wraps `codex` as `command codex --profile statusline ...` when the profile file exists, but only for the runtime subcommands that accept `--profile` (bare TUI, flag-first invocations, and `exec`/`review`/`resume`/`archive`/`unarchive`/`fork`/`mcp`/`sandbox`/`debug`). Management commands like `codex update`/`login` get a plain `command codex ...`, since `--profile` errors on them. This layers the repo-tracked statusline profile on top of the machine-local `~/.codex/config.toml` without taking ownership of auth/app/plugin/project-trust config.
 
+## Tool-name wrappers (old name points at new tool)
+
+Gordon's long-standing convention: when he adopts a replacement tool, the *old* command name is pointed at the new tool instead of retraining muscle memory. Two live examples, both in `fishconfig/personal.d/general.fish` and `zshconfig/personal.d/general.zsh`:
+
+- **`vim`/`gvim` → neovide.** The editor chain is SSH-vim > neovide > mvim > gvim > vim. Only the neovide branch needs special handling: neovide has its own clap-based CLI parser (it wraps neovim, it isn't one), so vim-native flags (`-R`, `-u`, `-c`, ...) must be passed after a `--` separator to reach the underlying nvim process, or neovide's own parser rejects them outright (`unexpected argument '-R' found`). `vim`/`gvim` are therefore real shell functions in the neovide branch — `neovide --no-fork -- $argv`/`"$@"` — not plain aliases; the mvim/gvim-real branches are real vim binaries and don't need this.
+- **`grep` → ripgrep (`rg`).** Lives in its own file (`fishconfig/personal.d/grep-ripgrep.fish` / `zshconfig/personal.d/grep-ripgrep.zsh`) rather than `general.*`, since the function is sizeable. A function gated on `rg` being installed (`__tool_check_cmd "ripgrep" rg search-tools`), falling back to the old `grep --color=auto` alias if not. The flag mapping started from what Gordon actually types — mined from his real shell history via **atuin** (`atuin search --search-mode fulltext --filter-mode global --cmd-only grep`; his real history tool, not raw `fish_history`/`.zsh_history`) — but this wrapper replaces `grep` for *every* caller in the shell, not just interactive typing, so it also has to survive third-party scripts sourced at startup:
+  - `-r`/`-R`/`-I` are dropped: rg recurses and skips binary files by default already.
+  - `-E` is dropped: rg's regex is already ERE-like by default. Critically, none of `-r`, `-I`, `-E` can just pass through unchanged — rg's own `-r`/`-E` take a required value (`--replace`/`--encoding`), so an unstripped `-r`/`-E` would silently eat the next argument, and rg's own `-I` means `--no-filename`, not "ignore binary".
+  - `-h` is translated to rg's `-I` (`--no-filename`), since rg's own `-h` is `--help`.
+  - `-i`/`-n`/`-v`/`-c`/`-l`/`-L`/`-o`/`-w`/`-x`/`-q`/`-s` pass through unchanged — identical meaning in both tools.
+  - Bundled short flags (e.g. `-cvE`) **are** expanded to individual flags before the above rules apply — this isn't optional: iTerm2's shell integration script (`iterm2_shell_integration.fish`) calls `grep -cvE '...'` on every fish startup, and an unbundled-only wrapper broke it, silently passing `-cvE` straight to rg and crashing shell init. Expansion only fires when every letter in the bundle is a recognized one; an unrecognized bundle passes through untouched so rg fails loudly on it rather than being silently misinterpreted.
+
+When adding or changing one of these wrappers: re-survey real usage via atuin rather than guessing at flag coverage, and check whether the wrapper needs arg-rewriting (use a function) or just a fixed prefix (an alias is fine).
+
+`command <name>` (e.g. `command grep`, `command vim`) always reaches the real underlying binary, bypassing the wrapper.
+
+**Internal call sites must not depend on the interactive wrapper.** Anything in `personal.d/*.zsh`/`personal.d/*.fish` that calls a wrapped command for its own logic (not as a user-facing convenience) should call `command grep`/`command vim`/etc. explicitly, so it keeps exact upstream semantics regardless of what the wrapper does. Current examples: `node-version-switch.zsh`/`.fish`'s `.tool-versions` check (`command grep -qE '^nodejs[[:space:]]'`), and the Codex `GH_AUTH_TOKEN`/`FA_AUTH_TOKEN` config checks and pyenv `virtualenv-init` check in `00-tools.*`/`general.*`. This isn't optional hardening — the `grep -qE` node-version-switch check broke silently under the `rg` wrapper (bundled `-qE` wasn't in its strip list) until this fix landed.
+
 ## OpenCode CLI
 
 OpenCode should be installed as a standalone binary, not as a global npm package, on these machines.

@@ -19,7 +19,7 @@ function __node_version_switch() {
       export ASDF_NODEJS_VERSION="$version"
       return
     fi
-    if [[ -f "$dir/.tool-versions" ]] && grep -qE '^nodejs[[:space:]]' "$dir/.tool-versions"; then
+    if [[ -f "$dir/.tool-versions" ]] && command grep -qE '^nodejs[[:space:]]' "$dir/.tool-versions"; then
       break
     fi
     [[ "$dir" == "/" ]] && break

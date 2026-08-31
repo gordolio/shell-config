@@ -18,7 +18,7 @@ function __node_version_switch --on-variable PWD
             set -gx ASDF_NODEJS_VERSION $nvmrc_version
             return
         end
-        if test -f "$dir/.tool-versions"; and grep -qE '^nodejs[[:space:]]' "$dir/.tool-versions"
+        if test -f "$dir/.tool-versions"; and command grep -qE '^nodejs[[:space:]]' "$dir/.tool-versions"
             break
         end
         if test "$dir" = "/"
