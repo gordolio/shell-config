@@ -92,14 +92,22 @@ else
   alias lal "ls -la"
 end
 
+# grep -> rg wrapper: see personal.d/grep-ripgrep.fish
+
 # Editor chain: SSH uses vim, otherwise neovide > mvim > gvim > vim
 if string match -r -q '/dev/.*' $SSH_TTY
   __tool_check_cmd "vim" vim editor
   set -x EDITOR "vim -f"
 else if __tool_check_cmd "neovide" neovide editor
   set -x EDITOR "neovide --no-fork 2>/dev/null"
-  alias gvim $EDITOR
-  alias vim $EDITOR
+  # neovide has its own clap-based CLI parser, unlike real vim binaries; vim-style
+  # flags (-R, -u, -c, ...) must go after `--` to reach the wrapped nvim process.
+  function vim
+    neovide --no-fork -- $argv 2>/dev/null
+  end
+  function gvim
+    neovide --no-fork -- $argv 2>/dev/null
+  end
 else if __tool_check_cmd "mvim" mvim editor
   set -x EDITOR "mvim -f --nomru"
   alias gvim "mvim -f"

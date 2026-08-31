@@ -314,7 +314,7 @@ end
 # Run symlink checks at startup
 __check_setup_symlinks
 set -l __codex_config "$HOME/.codex/config.toml"
-if test -f "$__codex_config"; and grep -q '^GH_AUTH_TOKEN = ""$' "$__codex_config"; and grep -q '^FA_AUTH_TOKEN = ""$' "$__codex_config"
+if test -f "$__codex_config"; and command grep -q '^GH_AUTH_TOKEN = ""$' "$__codex_config"; and command grep -q '^FA_AUTH_TOKEN = ""$' "$__codex_config"
   __tool_record "codex-safe-shell-env" codex configured "$__codex_config" "$__codex_config"
 else
   __tool_record "codex-safe-shell-env" codex missing "$__codex_config needs blank npm auth token defaults" "$__codex_config"
@@ -341,7 +341,7 @@ function ls-tools
       echo ""
     end
     set -l codex_config "$HOME/.codex/config.toml"
-    if not test -f "$codex_config"; or not grep -q '^GH_AUTH_TOKEN = ""$' "$codex_config"; or not grep -q '^FA_AUTH_TOKEN = ""$' "$codex_config"
+    if not test -f "$codex_config"; or not command grep -q '^GH_AUTH_TOKEN = ""$' "$codex_config"; or not command grep -q '^FA_AUTH_TOKEN = ""$' "$codex_config"
       mkdir -p "$HOME/.codex"
       printf '\n[shell_environment_policy.set]\nGH_AUTH_TOKEN = ""\nFA_AUTH_TOKEN = ""\n' >> "$codex_config"
       echo "🔧 "(string replace -a $HOME "$__home_icon" "$codex_config")" added Codex blank npm auth token defaults"

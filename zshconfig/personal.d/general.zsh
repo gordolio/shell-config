@@ -80,8 +80,10 @@ if [[ "$SSH_TTY" =~ /dev/.* ]]; then
   export EDITOR="vim -f"
 elif __tool_check_cmd "neovide" neovide editor; then
   export EDITOR="neovide --no-fork 2>/dev/null"
-  alias gvim="$EDITOR"
-  alias vim="$EDITOR"
+  # neovide has its own clap-based CLI parser, unlike real vim binaries; vim-style
+  # flags (-R, -u, -c, ...) must go after `--` to reach the wrapped nvim process.
+  vim() { neovide --no-fork -- "$@" 2>/dev/null }
+  gvim() { neovide --no-fork -- "$@" 2>/dev/null }
 elif __tool_check_cmd "mvim" mvim editor; then
   export EDITOR="mvim -f --nomru"
   alias gvim="mvim -f"
@@ -103,7 +105,7 @@ if __tool_check_cmd "pyenv" pyenv lang-managers; then
     eval "$(pyenv init --path)"
     eval "$(pyenv init -)"
     # pyenv-virtualenv (optional)
-    if pyenv commands 2>/dev/null | grep -q virtualenv-init; then
+    if pyenv commands 2>/dev/null | command grep -q virtualenv-init; then
       eval "$(pyenv virtualenv-init -)"
     fi
   fi
@@ -143,7 +145,7 @@ bindkey "^U" backward-kill-line
 
 # Simple aliases
 alias ..="cd .."
-alias grep="grep --color=auto"
+# grep -> rg wrapper: see personal.d/grep-ripgrep.zsh
 alias egrep="egrep --color=auto"
 alias tidy="json_xs -f json -t json-pretty"
 alias lg="lazygit"
