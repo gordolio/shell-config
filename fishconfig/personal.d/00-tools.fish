@@ -340,6 +340,10 @@ function ls-tools
       env SHELL_CONFIG=$shell_config bash $shell_config/gitconfig/fix-local.sh
       echo ""
     end
+    if test -x $shell_config/gnupgconfig/fix-pinentry-fallback.sh
+      bash $shell_config/gnupgconfig/fix-pinentry-fallback.sh
+      echo ""
+    end
     if test -x $shell_config/tigconfig/gpg-trust-check.sh
       bash $shell_config/tigconfig/gpg-trust-check.sh
       echo ""

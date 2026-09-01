@@ -297,6 +297,10 @@ function ls-tools {
       SHELL_CONFIG="$shell_config" bash "$shell_config/gitconfig/fix-local.sh"
       echo ""
     fi
+    if [[ -x "$shell_config/gnupgconfig/fix-pinentry-fallback.sh" ]]; then
+      bash "$shell_config/gnupgconfig/fix-pinentry-fallback.sh"
+      echo ""
+    fi
     if [[ -x "$shell_config/tigconfig/gpg-trust-check.sh" ]]; then
       bash "$shell_config/tigconfig/gpg-trust-check.sh"
       echo ""
