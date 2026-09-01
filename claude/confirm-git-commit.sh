@@ -65,5 +65,5 @@ approved=$?
 if [[ $approved -eq 0 ]]; then
   decision allow 'Approved by the User against the staged diff.'
 else
-  decision deny 'The User declined this commit at the approval dialog. Do not retry it or reword the message; ask what he wants changed first.'
+  decision deny 'The User declined this commit at the approval dialog. Do not retry it or reword the message; ask what they want changed first.'
 fi
