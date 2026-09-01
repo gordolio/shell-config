@@ -179,6 +179,8 @@ function __check_setup_symlinks
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" $category
   __tool_check_symlink ".hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" $category
   __tool_check_symlink ".claude/hooks/gh-allowlist.py" "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" $category
+  __tool_check_symlink ".claude/hooks/confirm-git-commit.sh" "$HOME/.claude/hooks/confirm-git-commit.sh" "$shell_config/claude/confirm-git-commit.sh" $category
+  __tool_check_symlink ".gnupg/pinentry-ide.sh" "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" $category
   __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" $category
   __tool_check_symlink ".codex/statusline.config.toml" "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" $category
   __tool_check_symlink ".config/opencode/tui.json" "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" $category
@@ -258,6 +260,8 @@ function __fix_setup_symlinks
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
   __fix_symlink "$HOME/.hammerspoon/init.lua" "$shell_config/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
   __fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$shell_config/claude/gh-allowlist.py" ".claude/hooks/gh-allowlist.py"
+  __fix_symlink "$HOME/.claude/hooks/confirm-git-commit.sh" "$shell_config/claude/confirm-git-commit.sh" ".claude/hooks/confirm-git-commit.sh"
+  __fix_symlink "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" ".gnupg/pinentry-ide.sh"
   __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
   __fix_symlink "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" ".codex/statusline.config.toml"
   __fix_symlink "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" ".config/opencode/tui.json"

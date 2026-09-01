@@ -16,9 +16,21 @@ Troubleshooting cue: only if someone is asking about codex here and it sounds li
 
 ## Claude Code Statusline (`claude/`)
 
-The `claude/` directory contains the statusline script for Claude Code.
+The `claude/` directory contains the statusline script and hooks for Claude Code.
 
 - `statusline-command.sh` — Claude Code statusline script that displays the vim-mode chip, model, user, path, git info, time, version, and context/usage dot bars. Uses data from Claude Code's statusline JSON input (no external API calls needed).
+- `gh-allowlist.py` — `PreToolUse` hook blocking agent-initiated GitHub writes.
+- `confirm-git-commit.sh` — `PreToolUse` hook gating commit-finalizing git commands (`git commit`, and `--continue` for rebase/cherry-pick/merge/revert/am). Opens the staged changeset in a diff viewer and holds the command behind an approval dialog. Non-matching commands short-circuit before any work is done. Needs a long `timeout` in its settings entry, or the dialog is killed while the diff is still being read.
+
+Both are symlinked into place by `ls-tools --fix`.
+
+## GnuPG pinentry (`gnupgconfig/`)
+
+- `pinentry-ide.sh` — the pinentry dispatcher `gpg-agent.conf` points at, symlinked into place by `ls-tools --fix`.
+
+The IDE generates this file and owns the `IJ_PINENTRY*` branches, left as generated so IDE commits keep using its own passphrase prompt. Only the fallback differs: upstream ends at `pinentry-curses`, which needs a controlling tty and so fails outright for any non-interactive caller — scripts, hooks and agent shells get an error rather than a prompt. The tracked version prefers `pinentry-mac`, which works from any process, and falls back to the original if it is not installed.
+
+Tracking it is the point. If the IDE rewrites the file it either overwrites through the symlink (a git diff here) or replaces the symlink (`not_symlink` in `ls-tools`), so the regression surfaces instead of silently breaking headless signing. This has already happened once. Note it only protects you once committed: an overwrite of an uncommitted file leaves nothing to diff against.
 
 ## Claude Code through Codex (`claudex`)
 
@@ -80,3 +92,14 @@ OpenCode config notes:
 - OpenCode does not currently expose a configurable statusline or command-backed statusline hook. Use `tui.json` for supported TUI settings only; do not add statusline keys unless they appear in `https://opencode.ai/tui.json`.
 - OpenCode reads `AGENTS.md`; `/init` can generate one, but this repo already maintains `AGENT.md` for Codex-specific notes and should use `AGENTS.md` only if OpenCode needs project-facing instructions.
 - Troubleshooting cue: only if OpenCode behaves like the wrong install is being used, check `which opencode` and `asdf which opencode`/`~/.asdf/shims/opencode`. Prefer `/opt/homebrew/bin/opencode` or `$HOME/.opencode/bin/opencode`; remove stale asdf/npm shims rather than changing PATH broadly.
+
+## Git identity and commit signing (`gitconfig/`)
+
+`gitconfig/gitconfig` (tracked here, symlinked to `~/.gitconfig`) sets a default identity at the top level and layers per-directory overrides on top via `includeIf "gitdir:..."`, so work repositories get a different identity and signing key from personal ones.
+
+- The per-directory config files the `includeIf` entries point at are **machine-local and not tracked in this repo**. They hold the work identity and signing key. The `includeIf` plumbing arrives for free on a new machine via the symlinked `gitconfig/gitconfig`, but those files do not — recreate them by hand when setting up a new machine, or work commits silently use the personal identity.
+- `~/.gitconfig.local` (machine-local, regenerated idempotently by `gitconfig/fix-local.sh`, included unconditionally near the bottom of `gitconfig/gitconfig`) sets only `gpg.program` and `cz-ai.backend`. It does not set identity or signing key, so it never overrides the choice above.
+
+**Planned, not yet done:** a separate signing key for the personal identity, so open-source commits get signed too. The top-level `[user]` section already applies only outside the `includeIf` directories, so this needs no change to the work configs — just a `signingkey` and `commit.gpgsign` at the top level of `gitconfig/gitconfig` once the key exists.
+
+Key generation (`gpg --full-generate-key`) is run by hand, not on anyone's behalf — it touches `~/.gnupg`.
