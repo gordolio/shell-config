@@ -516,6 +516,17 @@ safe_setup('neo-tree', function(neotree)
   })
 end)
 
+-- Close nvim if Neo-tree is left as the only window (e.g. after :q on the
+-- last real buffer), instead of leaving the sidebar stranded on its own.
+vim.api.nvim_create_autocmd('BufEnter', {
+  nested = true,
+  callback = function()
+    if #vim.api.nvim_list_wins() == 1 and vim.bo.filetype == 'neo-tree' then
+      vim.cmd('quit')
+    end
+  end,
+})
+
 -- Which-key: Shows available keybinding hints as you type
 safe_setup('which-key', {})
 

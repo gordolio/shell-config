@@ -110,11 +110,27 @@ else if __tool_check_cmd "neovide" neovide editor
   set -x EDITOR "neovide --no-fork 2>/dev/null"
   # neovide has its own clap-based CLI parser, unlike real vim binaries; vim-style
   # flags (-R, -u, -c, ...) must go after `--` to reach the wrapped nvim process.
+  # But plain filenames must NOT go after `--`: neovide only runs its own
+  # focus-switch logic for files given as its leading FILES_TO_OPEN args.
+  # Anything shoved into the `--`-separated NEOVIM_ARGS instead gets added as
+  # an unloaded, unfocused buffer, leaving neovide's own intro-screen buffer
+  # active as "[No Name]" next to it (reproduced: `neovide --no-fork -- file`
+  # leaves two buffers with the file unfocused; `neovide --no-fork file`
+  # opens straight into it).
+  function __vim_neovide
+    for a in $argv
+      if string match -q -- '-*' $a
+        neovide --no-fork -- $argv 2>/dev/null
+        return
+      end
+    end
+    neovide --no-fork $argv 2>/dev/null
+  end
   function vim
-    neovide --no-fork -- $argv 2>/dev/null
+    __vim_neovide $argv
   end
   function gvim
-    neovide --no-fork -- $argv 2>/dev/null
+    __vim_neovide $argv
   end
 else if __tool_check_cmd "mvim" mvim editor
   set -x EDITOR "mvim -f --nomru"
