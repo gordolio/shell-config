@@ -363,6 +363,9 @@ function AutoNeoTree()
   elseif argc() == 1 && isdirectory(argv()[0])
     execute 'set columns=' . (g:editor_width + g:neotree_width)
     execute 'Neotree show dir=' . argv()[0]
+  elseif argc() == 1 && filereadable(argv()[0]) && isdirectory('.git')
+    execute 'set columns=' . (g:editor_width + g:neotree_width)
+    Neotree show
   else
     execute 'set columns=' . (g:editor_width)
   endif
