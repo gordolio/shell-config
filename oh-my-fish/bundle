@@ -4,7 +4,6 @@ package foreign-env
 package fzf
 package fzf-autojump
 package nvm
-package rbenv
 package sdk
 package z
 theme agnoster

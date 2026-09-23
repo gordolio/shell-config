@@ -16,10 +16,6 @@ if type -q brew
   end
 end
 
-if status --is-interactive; and __tool_check_cmd "rbenv" rbenv tool
-    rbenv init - fish | source
-end
-
 function sshkey
     ssh-copy-id -i ~/.ssh/id_ed25519.pub $argv
 end
