@@ -6,8 +6,9 @@
 # so it is one gesture rather than two.
 #
 # Symlinked to ~/.claude/hooks/confirm-git-commit.sh by `ls-tools --fix`, and
-# registered under hooks.PreToolUse[matcher=Bash] in ~/.claude/settings.json with a
-# long timeout so the dialog is not killed while the diff is still being read.
+# registered under hooks.PreToolUse[matcher=Bash] in ~/.claude/settings.json (by
+# claude/fix-settings.sh) with a long timeout so the dialog is not killed while the
+# diff is still being read.
 
 set -uo pipefail
 

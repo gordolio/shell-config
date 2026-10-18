@@ -323,6 +323,12 @@ if test -f "$__codex_config"; and command grep -q '^GH_AUTH_TOKEN = ""$' "$__cod
 else
   __tool_record "codex-safe-shell-env" codex missing "$__codex_config needs blank npm auth token defaults" "$__codex_config"
 end
+set -l __claude_settings_missing (env SHELL_CONFIG=$HOME/src/shell-config bash $HOME/src/shell-config/claude/fix-settings.sh --check 2>/dev/null)
+if test $status -eq 0
+  __tool_record "claude-settings" claude configured "$HOME/.claude/settings.json" "$HOME/.claude/settings.json"
+else
+  __tool_record "claude-settings" claude missing "needs: "(string join ", " $__claude_settings_missing) "$HOME/.claude/settings.json"
+end
 
 # Check plugin manager
 if functions -q fisher
@@ -342,6 +348,10 @@ function ls-tools
     end
     if test -x $shell_config/gnupgconfig/fix-pinentry-fallback.sh
       bash $shell_config/gnupgconfig/fix-pinentry-fallback.sh
+      echo ""
+    end
+    if test -x $shell_config/claude/fix-settings.sh
+      env SHELL_CONFIG=$shell_config bash $shell_config/claude/fix-settings.sh
       echo ""
     end
     if test -x $shell_config/tigconfig/gpg-trust-check.sh
