@@ -1285,7 +1285,7 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 	<key>DisableFullscreenTransparency</key>
 	<false/>
 	<key>EnableAPIServer</key>
-	<false/>
+	<true/>
 	<key>EnableDivisionView</key>
 	<true/>
 	<key>EnableProxyIcon</key>
@@ -6249,6 +6249,7 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 	<key>ToolbeltTools</key>
 	<array>
 		<string>Command History</string>
+		<string>Session Status</string>
 	</array>
 	<key>TripleClickSelectsFullWrappedLines</key>
 	<false/>
@@ -6276,6 +6277,37 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 	<integer>0</integer>
 	<key>WordCharacters</key>
 	<string>/-+\~_.</string>
+	<key>Workgroups</key>
+	<data>
+	W3sic2Vzc2lvbnMiOlt7ImRpc3BsYXlOYW1lIjoiQ2hhdCIsInVuaXF1ZUlkZW50aWZp
+	ZXIiOiJidWlsdGluLmNsYXVkZUNvZGUubWFpbiIsIm1vZGUiOiJyZWd1bGFyIiwiY29t
+	bWFuZCI6IiIsInRvb2xiYXJJdGVtcyI6W3sia2luZCI6Im1vZGVTd2l0Y2hlciJ9LHsi
+	a2luZCI6ImdpdFN0YXR1cyJ9LHsia2luZCI6ImF1dG9SZXF1ZXN0UmV2aWV3V2hlbklk
+	bGUifV0sInBlckZpbGVDb21tYW5kIjoiIiwia2luZCI6eyJraW5kIjoicm9vdCJ9LCJ1
+	cmxTdHJpbmciOiIifSx7ImRpc3BsYXlOYW1lIjoiRGlmZiIsInVuaXF1ZUlkZW50aWZp
+	ZXIiOiJidWlsdGluLmNsYXVkZUNvZGUuZGlmZiIsInBhcmVudElEIjoiYnVpbHRpbi5j
+	bGF1ZGVDb2RlLm1haW4iLCJtb2RlIjoiZGlmZiIsImNvbW1hbmQiOiJnaXQgZGlmZnRv
+	b2wgLXkgLXggdmltZGlmZiBcXChnaXRCYXNlKSIsInRvb2xiYXJJdGVtcyI6W3sia2lu
+	ZCI6Im1vZGVTd2l0Y2hlciJ9LHsia2luZCI6ImNoYW5nZWRGaWxlU2VsZWN0b3IifSx7
+	ImtpbmQiOiJnaXRCYXNlU2VsZWN0b3IifSx7ImJhY2tTaG9ydGN1dCI6eyJzZXJpYWxp
+	emVkIjoiMHhmNzAyLTB4MzQwMDAwLTB4N2IifSwia2luZCI6Im5hdmlnYXRpb24iLCJy
+	ZWxvYWRTaG9ydGN1dCI6eyJzZXJpYWxpemVkIjoiMHg3Mi0weDEwMDAwMC0weGYifSwi
+	Zm9yd2FyZFNob3J0Y3V0Ijp7InNlcmlhbGl6ZWQiOiIweGY3MDMtMHgzNDAwMDAtMHg3
+	YyJ9fV0sInBlckZpbGVDb21tYW5kIjoiZ2l0IGRpZmZ0b29sIC15IC14IHZpbWRpZmYg
+	XFwoZ2l0QmFzZSkgLS0gXFwoZmlsZSkiLCJraW5kIjp7ImtpbmQiOiJwZWVyIn0sInVy
+	bFN0cmluZyI6IiJ9LHsiZGlzcGxheU5hbWUiOiJDb2RlIFJldmlldyIsInVuaXF1ZUlk
+	ZW50aWZpZXIiOiJidWlsdGluLmNsYXVkZUNvZGUucmV2aWV3IiwicGFyZW50SUQiOiJi
+	dWlsdGluLmNsYXVkZUNvZGUubWFpbiIsIm1vZGUiOiJjb2RlUmV2aWV3IiwiY29tbWFu
+	ZCI6ImNsYXVkZSBcXChjb2RlUmV2aWV3UHJvbXB0KSAtLWFwcGVuZC1zeXN0ZW0tcHJv
+	bXB0LWZpbGUgJ1xcKGNvZGVSZXZpZXdTeXN0ZW1Qcm9tcHRGaWxlKScgLS1zZXR0aW5n
+	cyAnXFwoaXRlcm0yLmFwcEJ1bmRsZVBhdGgpXC9Db250ZW50c1wvUmVzb3VyY2VzXC9j
+	b2RlLXJldmlldy1zZXR0aW5ncy50eHQnIiwidG9vbGJhckl0ZW1zIjpbeyJraW5kIjoi
+	bW9kZVN3aXRjaGVyIn0seyJzaG9ydGN1dCI6eyJzZXJpYWxpemVkIjoiMHg3Mi0weDEw
+	MDAwMC0weGYifSwia2luZCI6InJlbG9hZCJ9LHsia2luZCI6ImF1dG9TZW5kQ2xpcHBp
+	bmdzV2hlbklkbGUifV0sInBlckZpbGVDb21tYW5kIjoiIiwia2luZCI6eyJraW5kIjoi
+	cGVlciJ9LCJ1cmxTdHJpbmciOiIifV0sInVuaXF1ZUlkZW50aWZpZXIiOiJidWlsdGlu
+	LmNsYXVkZUNvZGUiLCJuYW1lIjoiQ2xhdWRlIENvZGUifV0=
+	</data>
 	<key>com.apple.WebPrivacy.ResourceMonitorURLsVersion</key>
 	<string>qrsAAAGXnXBrwGxMO6s=</string>
 	<key>findIgnoreCase_iTerm</key>
