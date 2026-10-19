@@ -186,4 +186,8 @@ HEROKU_AC_ZSH_SETUP_PATH="$HOME/Library/Caches/heroku/autocomplete/zsh_setup"
 
 unset __zshconfig
 
-[[ -n $ZSH_PROFILE_STARTUP ]] && zprof
+# Keep this an `if`: `[[ ... ]] && zprof` ends the file with status 1 when the
+# variable is unset, and the first prompt shows it as a failed previous command.
+if [[ -n $ZSH_PROFILE_STARTUP ]]; then
+  zprof
+fi
