@@ -197,6 +197,13 @@ if [[ -f "$__codex_config" ]] && command grep -q '^GH_AUTH_TOKEN = ""$' "$__code
 else
   __tool_record "codex-safe-shell-env" codex missing "$__codex_config needs blank npm auth token defaults" "$__codex_config"
 fi
+__claude_settings_missing=$(SHELL_CONFIG="$HOME/src/shell-config" bash "$HOME/src/shell-config/claude/fix-settings.sh" --check 2>/dev/null)
+if [[ $? -eq 0 ]]; then
+  __tool_record "claude-settings" claude configured "$HOME/.claude/settings.json" "$HOME/.claude/settings.json"
+else
+  __tool_record "claude-settings" claude missing "needs: ${__claude_settings_missing//$'\n'/, }" "$HOME/.claude/settings.json"
+fi
+unset __claude_settings_missing
 
 # Check plugin manager
 if (( $+commands[zinit] )) || (( $+functions[zinit] )); then
@@ -216,6 +223,10 @@ function ls-tools {
     fi
     if [[ -x "$shell_config/gnupgconfig/fix-pinentry-fallback.sh" ]]; then
       bash "$shell_config/gnupgconfig/fix-pinentry-fallback.sh"
+      echo ""
+    fi
+    if [[ -x "$shell_config/claude/fix-settings.sh" ]]; then
+      SHELL_CONFIG="$shell_config" bash "$shell_config/claude/fix-settings.sh"
       echo ""
     fi
     if [[ -x "$shell_config/tigconfig/gpg-trust-check.sh" ]]; then

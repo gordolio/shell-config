@@ -8,6 +8,7 @@ status_line = [
   "codex-version",
 ]
 status_line_use_colors = true
+screen_reader_detection_done = true
 
 [tui.keymap.global]
 open_transcript = "ctrl-t"
@@ -15,7 +16,16 @@ open_transcript = "ctrl-t"
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 1
-gpt-6-astra = 2
+gpt-6-astra = 4
 
 [projects."/Users/gordon/src/iTerm2"]
+trust_level = "trusted"
+
+[projects."/Users/gordon/src/project-chrome"]
+trust_level = "trusted"
+
+[projects."/Users/gordon/src/bg-insights"]
+trust_level = "trusted"
+
+[projects."/Users/gordon/src/omo-bench"]
 trust_level = "trusted"

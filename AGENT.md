@@ -22,7 +22,11 @@ The `claude/` directory contains the statusline script and hooks for Claude Code
 - `gh-allowlist.py` — `PreToolUse` hook blocking agent-initiated GitHub writes.
 - `confirm-git-commit.sh` — `PreToolUse` hook gating commit-finalizing git commands (`git commit`, and `--continue` for rebase/cherry-pick/merge/revert/am). Opens the staged changeset in a diff viewer and holds the command behind an approval dialog. Non-matching commands short-circuit before any work is done. Needs a long `timeout` in its settings entry, or the dialog is killed while the diff is still being read.
 
-Both are symlinked into place by `ls-tools --fix`.
+The two hooks are symlinked into `~/.claude/hooks/` by `ls-tools --fix`.
+
+- `fix-settings.sh` — run by `ls-tools --fix` (like `gitconfig/fix-local.sh`); `--check` mode feeds the `claude-settings` row in `ls-tools`. Idempotently merges into `~/.claude/settings.json` the `statusLine` entry, both `PreToolUse` hook registrations (matcher `Bash`; `confirm-git-commit.sh` gets a 1800s timeout — on timeout Claude Code falls back to its normal permission prompt, so this only keeps the dialog alive), and iTerm2's Claude Code integration hook (`~/.config/iterm2/cc-status` on every event iTerm2's wizard registers), plus the `cc-status` symlink into the iTerm2 app bundle. It only adds entries whose command isn't already registered for that event and never touches other keys. `settings.json` itself is deliberately not tracked or symlinked: Claude Code, `/config`, plugin toggles and iTerm2's wizard all write to it.
+
+The rest of iTerm2's Claude Code integration (Python API enabled, Session Status toolbelt tool, the "Claude Code" workgroup with Chat/Diff/Code Review sessions) is plain iTerm2 prefs in the tracked `iterm2config/com.googlecode.iterm2.plist`. If a newer iTerm2 hooks more events, re-run its wizard on one machine and copy the new events into `iterm_events` in `fix-settings.sh`.
 
 ## GnuPG pinentry (`gnupgconfig/`)
 

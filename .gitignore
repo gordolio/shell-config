@@ -20,3 +20,5 @@ zshconfig/env.d/*-local.zsh
 zshconfig/personal.d/local.zsh
 zshconfig/personal.d/*-local.zsh
 vimconfig/vimrc.local
+
+/.claude/
