@@ -1,12 +1,23 @@
 # JavaScript package managers (npm / yarn / pnpm) with 1Password-provided env.
 #
-# ~/.npmrc points the private @latermedia (GitHub Packages) and @fortawesome
-# registries at `_authToken=${GH_AUTH_TOKEN}` / `${FA_AUTH_TOKEN}`. npm and yarn
-# eagerly env-substitute those lines at startup and throw on an *undefined* var, so
-# every command — even ones that never touch the registry — needs the token names
-# to exist. Only commands that actually *fetch* (install, add, …) need the real
-# values. So we resolve real tokens via 1Password for those, and inject blank
-# placeholders for everything else.
+# ~/.npmrc (the default — loaded by every invocation everywhere: shells, IDE run
+# configs, scripts) has NO auth lines for the private @latermedia (GitHub
+# Packages) / @fortawesome registries. npm and yarn eagerly env-substitute any
+# ${...} lines present at startup and throw on an *undefined* var (not on an
+# empty one), so a naive setup needs GH_AUTH_TOKEN/FA_AUTH_TOKEN to exist just to
+# run a dev server. Since the default config references neither var at all
+# anymore, that failure mode is gone unconditionally — nothing (this wrapper, an
+# IDE run config, whatever clears an env var) can trigger it, because there's
+# nothing left to substitute.
+#
+# Only commands that actually *fetch* (install, add, …) need real auth. They get
+# it by pointing npm/yarn at a second config file (~/.npmrcs/work-auth) that DOES
+# have the substitution lines, via npm_config_userconfig, used only for that one
+# call — combined with `op run` resolving the real tokens from 1Password for the
+# same call, so the substitution always succeeds by construction. Everything
+# else just execs the real binary with the TTY intact and no 1Password round-trip
+# — op run proxies stdio to mask secrets, which breaks interactive dev
+# servers/watchers.
 
 __tool_check_cmd "op" op secrets
 __tool_check_cmd "npm" npm package-managers
@@ -14,18 +25,14 @@ __tool_check_cmd "yarn" yarn package-managers
 __tool_check_cmd "pnpm" pnpm package-managers
 
 # Subcommands that fetch from the private registries and so need the *real* tokens.
-# Everything else only needs the token names defined (empty is fine), which lets us
-# run the real binary directly with the TTY intact — op run proxies stdio to mask
-# secrets, which breaks interactive dev servers / watchers — and skips a 1Password
-# round-trip on every run/dev/codegen.
 __op_npm_auth_cmds=(
   install i ci add update up upgrade upgrade-interactive
   dedupe import dlx create fetch publish
 )
 
-# Token names referenced by ~/.npmrc. Non-fetching commands only need these names
-# defined; the real values are resolved from 1Password for auth commands below.
-__op_npm_token_vars=(GH_AUTH_TOKEN FA_AUTH_TOKEN)
+# Config file carrying the real ${GH_AUTH_TOKEN}/${FA_AUTH_TOKEN} substitution.
+# Never loaded by default — only the auth path below points npm/yarn at it.
+__op_npm_auth_userconfig="$HOME/.npmrcs/work-auth"
 
 function __op_run_npm_env {
   local package_manager=$1
@@ -55,26 +62,9 @@ function __op_run_npm_env {
   done
 
   if (( needs_auth )) && [[ -f "$HOME/.config/op/npm.env" ]] && command -v op &>/dev/null; then
-    command op run --env-file "$HOME/.config/op/npm.env" -- "$package_manager" "$@"
+    npm_config_userconfig="$__op_npm_auth_userconfig" command op run --env-file "$HOME/.config/op/npm.env" -- "$package_manager" "$@"
   else
-    # Inject blank values for the token names so ~/.npmrc's ${...} substitution
-    # doesn't choke, then exec the real binary with the TTY preserved.
-    local -a runtime_env
-    local key value
-    for key in $__op_npm_token_vars; do
-      runtime_env+=("$key=")
-    done
-    if [[ -f "$HOME/.config/op/npm.env" ]]; then
-      while IFS='=' read -r key value; do
-        [[ -z "$key" || "$key" == '#'* ]] && continue
-        if [[ "$value" == op://* ]]; then
-          runtime_env+=("$key=")
-        else
-          runtime_env+=("$key=$value")
-        fi
-      done < "$HOME/.config/op/npm.env"
-    fi
-    env "${runtime_env[@]}" "$package_manager" "$@"
+    command "$package_manager" "$@"
   fi
 }
 
@@ -90,9 +80,10 @@ function pnpm {
   __op_run_npm_env pnpm "$@"
 }
 
-# npx is deliberately not routed through __op_run_npm_env: `prisma` is not in the auth
-# command list, so it would get blank registry tokens and break `npx @latermedia/...`.
-# It only needs the Prisma guard, which refuses `npx prisma` outright.
+# npx is deliberately not routed through __op_run_npm_env: it's not in the auth
+# command list, so wrapping it would run `npx @latermedia/...` unauthenticated
+# instead of resolving real tokens. It only needs the Prisma guard, which
+# refuses `npx prisma` outright.
 function npx {
   local db_guard="$HOME/src/shell-config/bin/prisma-target-guard.pl"
   if [[ -x "$db_guard" ]]; then
