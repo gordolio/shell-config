@@ -57,12 +57,14 @@ function bugi {
   outdated_formulae=(${outdated_formulae:#})
   outdated_casks=(${outdated_casks:#})
 
+  # zsh leaves "\t" literal inside double quotes, so fzf's --delimiter needs a real tab
+  local tab=$'\t'
   local f c
   for f in "${outdated_formulae[@]}"; do
-    [[ -n "$f" ]] && menu+=("F\t$f")
+    [[ -n "$f" ]] && menu+=("F${tab}$f")
   done
   for c in "${outdated_casks[@]}"; do
-    [[ -n "$c" ]] && menu+=("C\t$c")
+    [[ -n "$c" ]] && menu+=("C${tab}$c")
   done
 
   if (( ${#menu[@]} == 0 )); then
@@ -77,11 +79,13 @@ function bugi {
   (( preview_lines < 5 )) && preview_lines=5
 
   local picked
-  picked=$(printf "%s\n" "${menu[@]}" | fzf --multi \
+  # --no-height: fullscreen, overriding FZF_DEFAULT_OPTS's --height 40%; the preview
+  # sizing above assumes fzf owns all $LINES, or the preview squeezes the list away
+  picked=$(printf "%s\n" "${menu[@]}" | fzf --multi --no-height \
     --header='Keys:
   SPACE toggle | CTRL-A all | CTRL-D none | CTRL-T invert
   Type to filter | ENTER run upgrades | ESC cancel' \
-    --delimiter="\t" \
+    --delimiter="$tab" \
     --with-nth=2.. \
     --bind="space:toggle,ctrl-a:select-all,ctrl-d:deselect-all,ctrl-t:toggle-all" \
     --pointer='>' \
@@ -96,8 +100,8 @@ function bugi {
   local line tag name
 
   while IFS= read -r line; do
-    tag="${line%%	*}"
-    name="${line#*	}"
+    tag="${line%%${tab}*}"
+    name="${line#*${tab}}"
     if [[ "$tag" == "F" ]]; then
       formulas+=("$name")
     elif [[ "$tag" == "C" ]]; then
