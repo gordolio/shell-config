@@ -178,3 +178,15 @@ __tool_check_cmd "jq" jq claude
 __tool_check_cmd "curl" curl claude
 __tool_check_cmd "mitmproxy" mitmdump claude
 __tool_check_path "claude-statusline" "$HOME/src/shell-config/claude/statusline-command.sh" claude file
+
+# 1Password shell plugin: `op plugin init claude-code` writes a `claude()`
+# shim into ~/.config/op/plugins.sh that runs `op plugin run -- claude ...`.
+# We don't source that file — detect and route ourselves instead.
+if [[ -f "$HOME/.config/op/plugins.sh" ]] && command grep -q 'claude()' "$HOME/.config/op/plugins.sh"; then
+  __tool_record "claude-op-plugin" claude configured "$HOME/.config/op/plugins.sh" "$HOME/.config/op/plugins.sh"
+  function claude {
+    op plugin run -- claude "$@"
+  }
+else
+  __tool_record "claude-op-plugin" claude missing "run: op plugin init claude-code" "$HOME/.config/op/plugins.sh"
+fi

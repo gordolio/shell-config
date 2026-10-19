@@ -61,6 +61,11 @@ function __cached_eval {
 # Zinit plugin manager
 # =============================================================================
 
+# IDE shell-env resolvers (T3 Code, VS Code, ...) can hand child shells shifted
+# KEY=VALUE pairs; a relative XDG path here made the zinit bootstrap mkdir junk into $PWD.
+[[ -z "$XDG_DATA_HOME" || "$XDG_DATA_HOME" == /* ]] || unset XDG_DATA_HOME
+[[ -z "$XDG_CONFIG_HOME" || "$XDG_CONFIG_HOME" == /* ]] || unset XDG_CONFIG_HOME
+
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
 # Auto-install zinit if missing
@@ -153,9 +158,6 @@ if [[ -f "$HOME/.zsh/gd_key.txt" ]]; then
   export GD_KEY=$(<"$HOME/.zsh/gd_key.txt")
   export GD_SECRET=$(<"$HOME/.zsh/gd_secret.txt")
 fi
-
-# fzf
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
 # SDKMAN: candidates are already on PATH (env.d/zz-path-priority.zsh); the `sdk`
 # command loads sdkman-init.sh on first use.
