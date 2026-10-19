@@ -4435,7 +4435,7 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 			<key>Columns</key>
 			<integer>105</integer>
 			<key>Command</key>
-			<string>/opt/homebrew/bin/fish</string>
+			<string>/opt/homebrew/bin/zsh</string>
 			<key>Cursor Boost</key>
 			<real>0.0</real>
 			<key>Cursor Color</key>
@@ -6441,7 +6441,7 @@ Respond with one or more commands. IMPORTANT: Do NOT include any explanation or 
 			<key>Columns</key>
 			<integer>105</integer>
 			<key>Command</key>
-			<string>/opt/homebrew/bin/fish -c 'spark-ssh --vnc'</string>
+			<string>/Users/gordon/src/shell-config/bin/spark-ssh --vnc</string>
 			<key>Cursor Boost</key>
 			<real>0.0</real>
 			<key>Cursor Color</key>
