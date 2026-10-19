@@ -100,8 +100,9 @@ elseif isdirectory('/usr/local/opt')
   set rtp+=/usr/local/opt/fzf
 endif
 
-au FileType perl command! -range=% -nargs=* Tidy <line1>,<line2>! \perltidy
+au FileType perl command! -range=% -nargs=* Tidy call PerlTidy(<line1>,<line2>)
 au FileType json command! -range=% -nargs=* Tidy call JsonTidy(<line1>,<line2>)
+au FileType jsonc command! -range=% -nargs=* Tidy call JsoncTidy(<line1>,<line2>)
 au FileType jsonl command! -range=% -nargs=* Tidy call JsonlTidy(<line1>,<line2>)
 au FileType yaml command! -range=% -nargs=* Tidy call YamlTidy(<line1>,<line2>)
 au FileType xml command! -range=% -nargs=* Tidy call XmlTidy(<line1>,<line2>)
@@ -113,15 +114,70 @@ augroup filetypedetect
 
 let mapleader=","
 
+" Tidy rewrites the range in one shot, and coc.nvim's KeywordsBuffer.onChange
+" spreads every changed line into splice(), so a huge expansion (e.g. a minified
+" multi-MB JSON file) throws "Maximum call stack size exceeded". Detach coc while
+" the buffer is rewritten, then re-attach so it sees the result as a fresh document.
+function! CocPause() abort
+  let was = get(g:, 'coc_enabled', 0)
+  if was
+    silent! CocDisable
+  endif
+  return was
+endfunction
+
+function! CocResume(was) abort
+  if a:was
+    silent! CocEnable
+  endif
+endfunction
+
+" Replace lines line1..line2 with the output of cmd. The input lines are written
+" to a tempfile whose path is substituted for @FILE@ in cmd.
+"
+" This deliberately avoids `:{range}!cmd`: a filter pipes the whole range to the
+" command's stdin, and these commands read a tempfile instead of stdin, so a big
+" range (multi-MB) dies with "E5677: Error writing input to shell-command: EPIPE".
+" A failed command leaves the buffer untouched and shows its output as the error.
+function! TidyRange(line1, line2, lines, cmd) abort
+  let tempfile = tempname()
+  call writefile(a:lines, tempfile)
+  try
+    let out = systemlist(substitute(a:cmd, '@FILE@', tempfile, 'g'))
+    if v:shell_error
+      echohl ErrorMsg
+      echom 'Tidy failed: ' . join(out, ' ')[:300]
+      echohl None
+      return
+    endif
+    let whole_buffer = a:line1 == 1 && a:line2 == line('$')
+    let coc_was_on = CocPause()
+    try
+      silent execute a:line1 . ',' . a:line2 . 'delete _'
+      " one undo step, like a filter would be
+      undojoin | call append(a:line1 - 1, out)
+      if whole_buffer
+        " deleting every line leaves one empty line behind the appended text
+        silent $delete _
+      endif
+    finally
+      call CocResume(coc_was_on)
+    endtry
+  finally
+    call delete(tempfile)
+  endtry
+endfunction
+
 function JsonTidy(line1,line2)
   let text = join(getline(a:line1, a:line2),'')
   let text = substitute(text,"'\([^']*\)'",'"\1"','g')
   let text = substitute(text,"\(, \|{\)\([a-zA-Z_]*\):",'\1"\2":','g')
   let text = substitute(text,', }',' }','g')
-  let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
-  call writefile([text],tempfile)
-  execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/json_tidy.js"
-  call system("rm ".tempfile)
+  call TidyRange(a:line1, a:line2, [text], "cat @FILE@ | node ~/.vim/json_tidy.js")
+endfunction
+
+function JsoncTidy(line1,line2)
+  call TidyRange(a:line1, a:line2, getline(a:line1, a:line2), "cat @FILE@ | node ~/.vim/jsonc_tidy.js")
 endfunction
 
 function JsonlTidy(line1,line2)
@@ -156,8 +212,13 @@ function JsonlTidy(line1,line2)
   endif
 
   " Replace the range with formatted output
-  execute a:line1.",".a:line2."delete"
-  call append(a:line1 - 1, output)
+  let coc_was_on = CocPause()
+  try
+    execute a:line1.",".a:line2."delete"
+    call append(a:line1 - 1, output)
+  finally
+    call CocResume(coc_was_on)
+  endtry
 endfunction
 
 function YamlTidy(line1,line2)
@@ -165,18 +226,21 @@ function YamlTidy(line1,line2)
   " let text = substitute(text,"'\([^']*\)'",'"\1"','g')
   " let text = substitute(text,"\(, \|{\)\([a-zA-Z_]*\):",'\1"\2":','g')
   " let text = substitute(text,', }',' }','g')
-  let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
-  call writefile([text],tempfile)
-  execute a:line1.",".a:line2." ! cat ".tempfile." | node ~/.vim/yaml_tidy.js"
-  call system("rm ".tempfile)
+  call TidyRange(a:line1, a:line2, [text], "cat @FILE@ | node ~/.vim/yaml_tidy.js")
 endfunction
 
 function XmlTidy(line1,line2)
-	let text = [join(getline(a:line1, a:line2),'')]
-        let tempfile = substitute(system("mktemp /tmp/vimtidy.XXXX"),'\n','','')
-        call writefile(text,tempfile)
-	execute a:line1.",".a:line2." ! perl -MXML::Tidy -e '$tidy=XML::Tidy->new(shift());$tidy->tidy();print $tidy->toString();' ".tempfile
-        call system("rm ".tempfile)
+  let text = [join(getline(a:line1, a:line2),'')]
+  call TidyRange(a:line1, a:line2, text, "perl -MXML::Tidy -e '$tidy=XML::Tidy->new(shift());$tidy->tidy();print $tidy->toString();' @FILE@")
+endfunction
+
+function PerlTidy(line1,line2)
+  let coc_was_on = CocPause()
+  try
+    execute a:line1.",".a:line2." ! \\perltidy"
+  finally
+    call CocResume(coc_was_on)
+  endtry
 endfunction
 
 map Q :q

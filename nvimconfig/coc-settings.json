@@ -1,4 +1,9 @@
 {
+  "coc.preferences.maxFileSize": "1MB",
   "yaml.schemaStore.enable": true,
-  "yaml.schemaStore.url": "https://www.schemastore.org/api/json/catalog.json"
+  "yaml.schemaStore.url": "https://www.schemastore.org/api/json/catalog.json",
+  "json.schemaDownload.trustedDomains": {
+    "https://raw.githubusercontent.com": true,
+    "https://www.schemastore.org": true
+  }
 }
