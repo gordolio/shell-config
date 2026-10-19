@@ -1,0 +1,74 @@
+#!/bin/bash
+# spark-ssh - connect to Spark with both keys in a Homebrew SSH agent
+#
+# Usage: spark-ssh [--vnc | --agent-only]
+#
+# Run directly by the iTerm2 `spark` / `spark vnc` profiles, so it must not depend
+# on any shell config: iTerm2 launched from the Dock has only the system PATH.
+# See README.md ("Spark SSH profiles").
+
+usage() {
+  echo 'Usage: spark-ssh [--vnc | --agent-only]'
+}
+
+ssh_options=()
+agent_only=false
+case "$*" in
+  '') ;;
+  --vnc) ssh_options=(-L 5902:localhost:5902) ;;
+  --agent-only) agent_only=true ;;
+  --help | -h)
+    usage
+    echo 'Load both SSH keys, then connect to Spark and attach to tmux main.'
+    exit 0
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
+
+sshbin="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/openssh/bin"
+if [[ ! -x "$sshbin/ssh-agent" ]]; then
+  echo 'spark-ssh: Homebrew OpenSSH is required (brew install openssh).' >&2
+  exit 1
+fi
+
+keys=("$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_sudo_yubikey")
+for key in "${keys[@]}"; do
+  if [[ ! -r "$key" || ! -r "$key.pub" ]]; then
+    echo "spark-ssh: missing key or public key: $key" >&2
+    exit 1
+  fi
+done
+
+# Keep one agent across profile launches; leave other shells' agents alone.
+export SSH_AUTH_SOCK="${TMPDIR:-/tmp}/spark-ssh-agent.sock"
+"$sshbin/ssh-add" -l >/dev/null 2>&1
+if [[ $? -eq 2 ]]; then
+  if [[ -S "$SSH_AUTH_SOCK" ]]; then
+    rm "$SSH_AUTH_SOCK" || exit 1
+  fi
+  "$sshbin/ssh-agent" -a "$SSH_AUTH_SOCK" -c >/dev/null || exit 1
+fi
+
+loaded=$("$sshbin/ssh-add" -l 2>/dev/null | awk '{print $2}')
+for key in "${keys[@]}"; do
+  fingerprint=$("$sshbin/ssh-keygen" -lf "$key.pub" | awk '{print $2}')
+  if [[ -z "$fingerprint" || "$fingerprint" == *$'\n'* ]]; then
+    echo "spark-ssh: cannot read public key: $key.pub" >&2
+    exit 1
+  fi
+  if ! grep -qxF -- "$fingerprint" <<<"$loaded"; then
+    "$sshbin/ssh-add" "$key" || exit 1
+    loaded+=$'\n'"$fingerprint"
+  fi
+done
+
+if $agent_only; then
+  "$sshbin/ssh-add" -l
+  exit $?
+fi
+
+exec "$sshbin/ssh" -A -o IdentitiesOnly=yes -i "$HOME/.ssh/id_ed25519" \
+  -t ${ssh_options[@]+"${ssh_options[@]}"} gordolio@192.168.0.159 'tmux -CC new -A -s main'

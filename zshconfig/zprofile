@@ -1,0 +1,4 @@
+# Login shells. Agents that run `zsh -lc` (Codex) read this but never .zshrc, so
+# the everyone layer has to be reachable from here. zshrc sources it too; the
+# second load is a no-op.
+source "${${:-$HOME/.zprofile}:A:h}/env.zsh"

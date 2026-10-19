@@ -57,9 +57,9 @@ info "Creating symlinks..."
 fix_symlink "$HOME/.vim"                        "$SHELL_CONFIG/vimconfig"              ".vim"
 fix_symlink "$HOME/.vimrc"                      "$SHELL_CONFIG/vimconfig/vimrc"        ".vimrc"
 fix_symlink "$HOME/.zshrc"                      "$SHELL_CONFIG/zshconfig/zshrc"        ".zshrc"
+fix_symlink "$HOME/.zprofile"                   "$SHELL_CONFIG/zshconfig/zprofile"     ".zprofile"
 fix_symlink "$HOME/.gitconfig"                  "$SHELL_CONFIG/gitconfig/gitconfig"    ".gitconfig"
 fix_symlink "$HOME/.tigrc"                      "$SHELL_CONFIG/tigconfig/tigrc"        ".tigrc"
-fix_symlink "$HOME/.config/fish"                "$SHELL_CONFIG/fishconfig"             ".config/fish"
 fix_symlink "$HOME/.config/atuin/config.toml"   "$SHELL_CONFIG/atuinconfig/config.toml" ".config/atuin"
 fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"       ".config/oh-my-posh"
 fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
@@ -72,20 +72,16 @@ fix_symlink "$HOME/.codex/statusline.config.toml" "$SHELL_CONFIG/codex/statuslin
 info "Writing per-machine gitconfig..."
 SHELL_CONFIG="$SHELL_CONFIG" "$SHELL_CONFIG/gitconfig/fix-local.sh"
 
-# --- pick shell and run ls-tools ---
+# --- run ls-tools ---
 info "Verifying setup..."
-if command -v fish &>/dev/null; then
-  ok "Fish detected — running ls-tools"
-  fish -c "source $SHELL_CONFIG/fishconfig/personal.d/00-tools.fish; ls-tools"
-elif command -v zsh &>/dev/null; then
-  ok "Zsh detected (no fish) — running ls-tools"
-  zsh -c "source $SHELL_CONFIG/zshconfig/personal.d/00-tools.zsh; ls-tools"
+if command -v zsh &>/dev/null; then
+  zsh -c "source $SHELL_CONFIG/zshconfig/env.zsh; source $SHELL_CONFIG/zshconfig/personal.d/00-tools.zsh; ls-tools"
 else
-  warn "Neither fish nor zsh found — install one to use ls-tools"
+  warn "zsh not found — install it to use ls-tools"
 fi
 
 echo ""
 info "Done! Open a new shell to start using your config."
-if ! command -v fish &>/dev/null; then
-  echo "  Tip: brew install fish"
+if ! [ -x "$(brew --prefix)/bin/zsh" ]; then
+  echo "  Tip: brew install zsh (the iTerm2 profiles run Homebrew zsh)"
 fi

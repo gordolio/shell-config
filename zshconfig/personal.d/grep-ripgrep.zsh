@@ -1,8 +1,8 @@
 # grep -> rg wrapper. Flag mapping is based on actual usage surveyed from
 # shell history (2026-08-31), plus real bundled-flag calls hit by third-party
-# scripts sourced at startup (iTerm2's fish integration calls `grep -cvE`;
-# nothing similar found in its zsh integration, but harden the same way here
-# since this wraps grep for every caller, not just interactive typing):
+# scripts sourced at startup (iTerm2's fish integration called `grep -cvE`
+# back when fish was in use; nothing similar found in its zsh integration, but
+# stay hardened since this wraps grep for every interactive caller):
 # human-authored history uses -r/-i/-I/-n/-v/-E/-O. The startup call and the
 # established compatibility set additionally cover -R/-h/-c/-l/-L/-o/-w/-x/
 # -q/-s. -r/-I/-E/-O are dropped because rg already

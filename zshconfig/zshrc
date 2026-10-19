@@ -1,4 +1,63 @@
 # =============================================================================
+# Startup layers
+# =============================================================================
+#
+# env.zsh + env.d/   every shell, humans and agents: PATH, exports, and wrappers
+#                    that decide whether a command works or is safe. zprofile
+#                    loads it too, for login shells that never read this file.
+# below this check   interactive shells only: plugins, prompt, completions, key
+#                    bindings, and wrappers that only change output or swap the
+#                    tool (grep -> rg, ls -> eza, vim -> neovide, ...).
+#
+# Agents run non-interactive shells. Claude Code sources this file from a
+# non-interactive login shell and snapshots whatever it defines, so nothing past
+# the interactive check reaches agent commands.
+#
+# Profile startup: ZSH_PROFILE_STARTUP=1 zsh -i -c exit
+
+[[ -n $ZSH_PROFILE_STARTUP ]] && zmodload zsh/zprof
+
+__zshconfig="${${:-$HOME/.zshrc}:A:h}"
+
+source "$__zshconfig/env.zsh"
+
+if [[ ! -o interactive ]]; then
+  unset __zshconfig
+  return 0
+fi
+
+# =============================================================================
+# Cached init scripts
+# =============================================================================
+
+# Source a tool's generated init script from a cache instead of running the tool
+# on every start. Rebuilt when the command changes, when the stamp binary resolves
+# to a new path (Homebrew upgrades move it to a new Cellar directory), or when it
+# is newer than the cache. Pass the shell explicitly: tools that guess it from
+# $SHELL can emit another shell's syntax.
+#   __cached_eval <cache-name> <stamp-binary> <command> [args...]
+function __cached_eval {
+  local name=$1 bin=${commands[$2]:A}
+  shift 2
+  [[ -n $bin ]] || return 1
+
+  local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/init-$name.zsh"
+  local stamp="# generated from $bin by: $*" first=""
+  [[ -r $cache ]] && read -r first < "$cache"
+
+  if [[ "$first" != "$stamp" || "$bin" -nt "$cache" ]]; then
+    mkdir -p "${cache:h}"
+    if ! { print -r -- "$stamp"; command "$@"; } >| "$cache.tmp" 2>/dev/null; then
+      rm -f "$cache.tmp"
+      return 1
+    fi
+    mv -f "$cache.tmp" "$cache"
+  fi
+
+  source "$cache"
+}
+
+# =============================================================================
 # Zinit plugin manager
 # =============================================================================
 
@@ -29,7 +88,18 @@ zinit wait lucid for \
 # Completions
 # =============================================================================
 
-autoload -Uz compinit && compinit
+# Full compinit (with its security audit) at most once a day; otherwise trust the
+# existing dump. Delete ~/.zcompdump to force a rebuild after installing tools.
+autoload -Uz compinit
+() {
+  setopt local_options extended_glob
+  local dump="${ZDOTDIR:-$HOME}/.zcompdump"
+  if [[ -n $dump(#qN.mh+24) || ! -s $dump ]]; then
+    compinit
+  else
+    compinit -C
+  fi
+}
 zinit cdreplay -q
 
 # =============================================================================
@@ -47,7 +117,7 @@ setopt pushd_silent
 # Source personal.d/ configs (sorted: 00- first, zz- last)
 # =============================================================================
 
-__personal_d="${${:-$HOME/.zshrc}:A:h}/personal.d"
+__personal_d="$__zshconfig/personal.d"
 
 # Source all *.zsh files from personal.d/ (sorted order)
 if [[ -d "$__personal_d" ]]; then
@@ -66,10 +136,11 @@ fi
 unset __personal_d __f
 
 # =============================================================================
-# Oh My Posh prompt (after personal.d so PATH includes homebrew)
+# Oh My Posh prompt
 # =============================================================================
 
-if command -v oh-my-posh &>/dev/null; then
+# Not cached: its init output carries a per-session id.
+if (( $+commands[oh-my-posh] )); then
   eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/jandedobbeleer.omp.yaml)"
 fi
 
@@ -86,27 +157,31 @@ fi
 # fzf
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
-# SDKMAN (must be at end per SDKMAN requirements)
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+# SDKMAN: candidates are already on PATH (env.d/zz-path-priority.zsh); the `sdk`
+# command loads sdkman-init.sh on first use.
+if [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+  function sdk {
+    unfunction sdk
+    source "$SDKMAN_DIR/bin/sdkman-init.sh"
+    sdk "$@"
+  }
+fi
 
-# NVM
+# NVM: node comes from asdf, and nvm's default node is already on PATH
+# (env.d/zz-path-priority.zsh); `nvm` loads nvm.sh on first use.
 export NVM_DIR="$HOME/.nvm"
-[[ -s "$NVM_DIR/nvm.sh" ]] && \. "$NVM_DIR/nvm.sh"
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+  function nvm {
+    unfunction nvm
+    source "$NVM_DIR/nvm.sh"
+    nvm "$@"
+  }
+fi
 
 # Heroku autocomplete
 HEROKU_AC_ZSH_SETUP_PATH="$HOME/Library/Caches/heroku/autocomplete/zsh_setup"
 [[ -f "$HEROKU_AC_ZSH_SETUP_PATH" ]] && source "$HEROKU_AC_ZSH_SETUP_PATH"
 
-# ASDF (0.16+ is a Go rewrite — no asdf.sh, just put shims on PATH)
-__tool_add_path "asdf-shims" "$HOME/.asdf/shims" path prepend
+unset __zshconfig
 
-# Google Cloud SDK
-if [[ -f "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc" ]]; then
-  source "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc"
-fi
-
-# Added by LM Studio CLI (lms)
-__tool_add_path "lm-studio-bin" "$HOME/.cache/lm-studio/bin" path append
-# End of LM Studio CLI section
-
+[[ -n $ZSH_PROFILE_STARTUP ]] && zprof

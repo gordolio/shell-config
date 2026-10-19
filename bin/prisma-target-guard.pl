@@ -4,8 +4,8 @@
 # Usage: prisma-target-guard.pl <package-manager> <args...>
 #        exit 0 = allow, exit 1 = block (reason on STDERR)
 #
-# Called from the npm/yarn/pnpm wrappers in {fish,zsh}config/personal.d/
-# js-package-managers.*, which every `yarn ...` invocation already funnels through.
+# Called from the npm/yarn/pnpm wrappers in zshconfig/env.d/js-package-managers.zsh,
+# which every `yarn ...` invocation already funnels through (agent shells included).
 #
 # Why: `yarn prisma migrate dev` takes its target from whatever MYSQL_URL is in the
 # repo's .env, and those files get swapped between local and staging copies. Nothing

@@ -1,43 +1,13 @@
-# PATH setup
-__tool_add_path "usr-local-bin" "/usr/local/bin" path prepend
-__tool_add_path "usr-local-sbin" "/usr/local/sbin" path prepend
-__tool_add_path "homebrew-bin" "/opt/homebrew/bin" path prepend
-__tool_add_path "homebrew-sbin" "/opt/homebrew/sbin" path prepend
-__tool_add_path "home-bin" "$HOME/bin" path prepend
+# Interactive-only settings. PATH and exports agents also need are in
+# env.d/general.zsh.
 
-# Pager
-export PAGER="$(whence -p less) -X -F"
+# When zsh isn't the macOS login shell (iTerm2 runs it as a profile command),
+# SHELL still names the login shell. Point it at zsh so tools that start "your
+# shell" from here (tmux, vim's :terminal, Codex, completion generators) get zsh.
+[[ $SHELL == */zsh ]] || export SHELL=${commands[zsh]:-/bin/zsh}
 
 # TTY
 export TTY=$(tty)
-
-# Add pyenv to PATH (init happens later)
-__tool_add_path "pyenv-bin" "$HOME/.pyenv/bin" path prepend
-
-__tool_add_path "cargo-bin" "$HOME/.cargo/bin" path append
-if ! __tool_add_path "mysql-homebrew" "/opt/homebrew/mysql/bin" path append; then
-  if ! __tool_add_path "mysql-client-homebrew" "/opt/homebrew/opt/mysql-client/bin" path append; then
-    __tool_add_path "mysql-local" "/usr/local/mysql/bin" path append
-  fi
-fi
-__tool_add_path "git-credential-manager" "$HOME/apps/git-credential-manager" path append
-__tool_add_path "maven-bin" "$HOME/apps/maven/bin" path append
-
-# Perlbrew
-if __tool_check_path "perlbrew-init" "$HOME/perl5/perlbrew/etc/bashrc" integration file; then
-  export PERLBREW_ROOT="$HOME/perl5/perlbrew"
-  __tool_add_path "perlbrew-bin" "$PERLBREW_ROOT/bin" path prepend
-  source "$HOME/perl5/perlbrew/etc/bashrc"
-fi
-
-# Perl local::lib
-if __tool_check_path "perl5-home" "$HOME/perl5" integration dir; then
-  __tool_add_path "perl5-bin" "$HOME/perl5/bin" path prepend
-  export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
-  export PERL_LOCAL_LIB_ROOT="$HOME/perl5:$PERL_LOCAL_LIB_ROOT"
-  export PERL_MB_OPT="--install_base \"$HOME/perl5\""
-  export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
-fi
 
 # ls tool chain: cygpath (Windows) > eza > gls (GNU ls) > BSD ls
 local is_windows=0
@@ -113,17 +83,17 @@ else
   export EDITOR=vim
 fi
 
-# pyenv initialization
-if __tool_check_cmd "pyenv" pyenv lang-managers; then
+# pyenv shell function and completions (shims are already on PATH from env.d).
+# Cached, and `--no-rehash` skips the per-start rehash: pyenv rehashes after its
+# own installs, and `pyenv rehash` is there for anything else.
+if (( $+commands[pyenv] )); then
   if [[ -f "$HOME/.pyenv/shims/.pyenv-shim" ]]; then
-    echo "pyenv: skipping init (stale lock file exists). Run: rm ~/.pyenv/shims/.pyenv-shim" >&2
-  else
-    eval "$(pyenv init --path)"
-    eval "$(pyenv init -)"
-    # pyenv-virtualenv (optional)
-    if pyenv commands 2>/dev/null | command grep -q virtualenv-init; then
-      eval "$(pyenv virtualenv-init -)"
-    fi
+    echo "pyenv: stale lock file makes rehash hang. Run: rm ~/.pyenv/shims/.pyenv-shim" >&2
+  fi
+  __cached_eval pyenv pyenv pyenv init - --no-push-path --no-rehash zsh
+  # pyenv-virtualenv (optional)
+  if (( $+commands[pyenv-virtualenv-init] )); then
+    __cached_eval pyenv-virtualenv pyenv-virtualenv-init pyenv virtualenv-init - zsh
   fi
 fi
 
@@ -147,12 +117,33 @@ function zle-line-init {
 zle -N zle-keymap-select
 zle -N zle-line-init
 
+# Alt-Backspace deletes one path segment ("src/shell-config/" -> "src/"), where
+# ^W takes the whole path.
+function __backward_kill_path_segment {
+  local WORDCHARS=${WORDCHARS//\/}
+  zle backward-kill-word
+}
+zle -N __backward_kill_path_segment
+
 # Key bindings
 bindkey "^R" history-incremental-search-backward
 bindkey "^?" backward-delete-char
 bindkey "^W" backward-kill-word
 bindkey "^H" backward-delete-char
 bindkey "^U" backward-kill-line
+bindkey "^[^?" __backward_kill_path_segment
+
+# cd looks in the current directory, then home (`cd src` works from anywhere)
+cdpath=(. ~)
+
+# fzf: fd-backed file and directory sources for Ctrl-T / Alt-C and plain `fzf`
+if __tool_check_cmd "fd" fd search-tools; then
+  export FZF_DEFAULT_COMMAND="${FZF_DEFAULT_COMMAND:-fd --type f --hidden --follow --exclude .git}"
+  FZF_CTRL_T_COMMAND="${FZF_CTRL_T_COMMAND:-fd --type f --hidden --follow --exclude .git}"
+  FZF_ALT_C_COMMAND="${FZF_ALT_C_COMMAND:-fd --type d --hidden --follow --exclude .git}"
+fi
+export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS:---height 40%}"
+FZF_TMUX_HEIGHT="${FZF_TMUX_HEIGHT:-40%}"
 
 # Simple aliases
 alias ..="cd .."
@@ -162,6 +153,10 @@ alias tidy="json_xs -f json -t json-pretty"
 alias lg="lazygit"
 alias ping="/sbin/ping"
 alias spark='ssh -t -L 5902:localhost:5902 gordolio@192.168.0.159 "tmux -CC new -A -s main"'
+alias spark-ssh="$HOME/src/shell-config/bin/spark-ssh"
+if __tool_check_cmd "screenfetch" screenfetch tool; then
+  alias screenfetch="command screenfetch -D 'Mac OS X'"
+fi
 
 # nocorrect aliases
 alias gradle='nocorrect gradle'
@@ -175,36 +170,7 @@ if [[ -f /opt/homebrew/bin/gtar ]]; then
 fi
 
 # GPG TTY for interactive shells
-if [[ -o interactive ]]; then
-  export GPG_TTY=$(tty)
-fi
-
-# Android SDK
-if [[ -z "$ANDROID_HOME" ]]; then
-  export ANDROID_HOME="$HOME/Library/Android/sdk"
-fi
-__tool_add_path "android-emulator" "$ANDROID_HOME/emulator" path append
-__tool_add_path "android-platform-tools" "$ANDROID_HOME/platform-tools" path append
-
-if [[ -z "$ANDROID_STUDIO_HOME" ]]; then
-  export ANDROID_STUDIO_HOME="$HOME/Applications/Android Studio.app"
-fi
-__tool_add_path "android-studio-bin" "$ANDROID_STUDIO_HOME/Contents/bin" path prepend
-
-# Google Cloud SDK
-if [[ -n "$CLOUDSDK_GSUTIL_PYTHON" ]]; then
-  export CLOUDSDK_GSUTIL_PYTHON
-fi
-
-# pipx
-__tool_add_path "pipx-bin" "$HOME/.local/bin" path append
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-__tool_add_path "bun-bin" "$BUN_INSTALL/bin" path prepend
-
-# opencode
-__tool_add_path "opencode-bin" "$HOME/.opencode/bin" path prepend
+export GPG_TTY=$TTY
 
 # claude code statusline dependencies
 __tool_check_cmd "claude" claude claude

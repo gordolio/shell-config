@@ -1,99 +1,12 @@
-# Tool registry and helpers for startup checks
+# ls-tools: startup symlink checks, --fix, and the report (interactive only).
+# The registry helpers it reads from live in env.d/00-tools.zsh.
 
-typeset -ga __tool_names
-typeset -ga __tool_categories
-typeset -ga __tool_statuses
-typeset -ga __tool_details
-typeset -ga __tool_paths
+zmodload -F zsh/stat b:zstat
 
-local __home_icon=$'\e[38;2;91;155;213m\uf015\e[0m '
-local __brew_icon=$'\e[38;2;212;160;23m\uf0fc\e[0m '
-
-function __tool_record {
-  local name=$1 category=$2 tool_status=$3 detail=$4 tool_path=$5
-
-  __tool_names+=("$name")
-  __tool_categories+=("$category")
-  __tool_statuses+=("$tool_status")
-  __tool_details+=("$detail")
-  __tool_paths+=("$tool_path")
-}
-
-function __tool_check_cmd {
-  local name=$1 cmd=$2 category=$3
-
-  if command -v "$cmd" &>/dev/null; then
-    __tool_record "$name" "$category" loaded "$cmd" ""
-    return 0
-  fi
-
-  __tool_record "$name" "$category" missing "$cmd" ""
-  return 1
-}
-
-function __tool_check_path {
-  local name=$1 dir=$2 category=$3 kind=$4
-
-  if [[ -z "$dir" ]]; then
-    __tool_record "$name" "$category" missing "empty-path" ""
-    return 1
-  fi
-
-  if [[ "$kind" == "file" ]]; then
-    if [[ -f "$dir" ]]; then
-      __tool_record "$name" "$category" present "$dir" "$dir"
-      return 0
-    fi
-  else
-    if [[ -d "$dir" ]]; then
-      __tool_record "$name" "$category" present "$dir" "$dir"
-      return 0
-    fi
-  fi
-
-  __tool_record "$name" "$category" missing "$dir" "$dir"
-  return 1
-}
-
-function __tool_source {
-  local name=$1 file=$2 category=$3
-
-  if [[ -f "$file" ]]; then
-    source "$file"
-    __tool_record "$name" "$category" sourced "$file" "$file"
-    return 0
-  fi
-
-  __tool_record "$name" "$category" missing "$file" "$file"
-  return 1
-}
-
-function __tool_add_path {
-  # NOTE: cannot use "local path" — zsh's $path is tied to $PATH
-  local name=$1 dir=$2 category=$3 position=${4:-append}
-
-  if [[ -z "$dir" ]]; then
-    __tool_record "$name" "$category" missing "empty-path" ""
-    return 1
-  fi
-
-  if [[ -d "$dir" ]]; then
-    if [[ ":$PATH:" != *":$dir:"* ]]; then
-      if [[ "$position" == "prepend" ]]; then
-        export PATH="$dir:$PATH"
-      else
-        export PATH="$PATH:$dir"
-      fi
-      __tool_record "$name" "$category" added "$dir" "$dir"
-    else
-      __tool_record "$name" "$category" already_present "$dir" "$dir"
-    fi
-    return 0
-  fi
-
-  __tool_record "$name" "$category" missing "$dir" "$dir"
-  return 1
-}
+# Nerd Font glyphs as raw UTF-8 bytes (U+F015 house, U+F0FC beer). `\uXXXX`
+# escapes fail with "character not in range" when the locale isn't UTF-8.
+typeset -g __home_icon=$'\e[38;2;91;155;213m\xef\x80\x95\e[0m '
+typeset -g __brew_icon=$'\e[38;2;212;160;23m\xef\x83\xbc\e[0m '
 
 function __tool_check_symlink {
   local name=$1 link_path=$2 expected_target=$3 category=$4
@@ -111,8 +24,9 @@ function __tool_check_symlink {
     return 1
   fi
 
+  # zstat instead of $(readlink): this runs for every link on every start.
   local actual_target
-  actual_target=$(readlink "$link_path")
+  zstat -A actual_target +link -- "$link_path"
   actual_target="${actual_target/#\~/$HOME}"
 
   if [[ "$actual_target" == "$expected_target" ]]; then
@@ -131,9 +45,9 @@ function __check_setup_symlinks {
   __tool_check_symlink ".vim" "$HOME/.vim" "$shell_config/vimconfig" "$category"
   __tool_check_symlink ".vimrc" "$HOME/.vimrc" "$shell_config/vimconfig/vimrc" "$category"
   __tool_check_symlink ".zshrc" "$HOME/.zshrc" "$shell_config/zshconfig/zshrc" "$category"
+  __tool_check_symlink ".zprofile" "$HOME/.zprofile" "$shell_config/zshconfig/zprofile" "$category"
   __tool_check_symlink ".gitconfig" "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" "$category"
   __tool_check_symlink ".tigrc" "$HOME/.tigrc" "$shell_config/tigconfig/tigrc" "$category"
-  __tool_check_symlink ".config/fish" "$HOME/.config/fish" "$shell_config/fishconfig" "$category"
   __tool_check_symlink ".config/atuin" "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" "$category"
   __tool_check_symlink ".config/oh-my-posh" "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" "$category"
   __tool_check_symlink ".config/nvim" "$HOME/.config/nvim" "$shell_config/nvimconfig" "$category"
@@ -142,7 +56,6 @@ function __check_setup_symlinks {
   __tool_check_symlink ".claude/hooks/confirm-git-commit.sh" "$HOME/.claude/hooks/confirm-git-commit.sh" "$shell_config/claude/confirm-git-commit.sh" "$category"
   __tool_check_symlink ".gnupg/pinentry-ide.sh" "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" "$category"
   __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "$category"
-  __tool_check_symlink ".codex/statusline.config.toml" "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" "$category"
   __tool_check_symlink ".config/opencode/tui.json" "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" "$category"
   if [[ -e "$shell_config/op/npm.env" ]]; then
     __tool_check_symlink ".config/op/npm.env" "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" "$category"
@@ -212,9 +125,14 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.vim" "$shell_config/vimconfig" ".vim"
   __fix_symlink "$HOME/.vimrc" "$shell_config/vimconfig/vimrc" ".vimrc"
   __fix_symlink "$HOME/.zshrc" "$shell_config/zshconfig/zshrc" ".zshrc"
+  __fix_symlink "$HOME/.zprofile" "$shell_config/zshconfig/zprofile" ".zprofile"
   __fix_symlink "$HOME/.gitconfig" "$shell_config/gitconfig/gitconfig" ".gitconfig"
   __fix_symlink "$HOME/.tigrc" "$shell_config/tigconfig/tigrc" ".tigrc"
-  __fix_symlink "$HOME/.config/fish" "$shell_config/fishconfig" ".config/fish"
+  # fish config no longer lives here; clear the symlink older checkouts installed.
+  if [[ -L "$HOME/.config/fish" && "$(readlink "$HOME/.config/fish")" == "$shell_config/fishconfig" ]]; then
+    rm "$HOME/.config/fish"
+    echo "🔧 ${__home_icon}.config/fish removed (fish is no longer configured here)"
+  fi
   __fix_symlink "$HOME/.config/atuin/config.toml" "$shell_config/atuinconfig/config.toml" ".config/atuin"
   __fix_symlink "$HOME/.config/oh-my-posh" "$shell_config/oh-my-poshconfig" ".config/oh-my-posh"
   __fix_symlink "$HOME/.config/nvim" "$shell_config/nvimconfig" ".config/nvim"
@@ -223,7 +141,6 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.claude/hooks/confirm-git-commit.sh" "$shell_config/claude/confirm-git-commit.sh" ".claude/hooks/confirm-git-commit.sh"
   __fix_symlink "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" ".gnupg/pinentry-ide.sh"
   __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
-  __fix_symlink "$HOME/.codex/statusline.config.toml" "$shell_config/codex/statusline.config.toml" ".codex/statusline.config.toml"
   __fix_symlink "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" ".config/opencode/tui.json"
   if [[ -e "$shell_config/op/npm.env" ]]; then
     __fix_symlink "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" ".config/op/npm.env"
