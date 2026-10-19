@@ -21,8 +21,9 @@ The `claude/` directory contains the statusline script and hooks for Claude Code
 - `statusline-command.sh` — Claude Code statusline script that displays the vim-mode chip, model, user, path, git info, time, version, and context/usage dot bars. Uses data from Claude Code's statusline JSON input (no external API calls needed).
 - `gh-allowlist.py` — `PreToolUse` hook blocking agent-initiated GitHub writes.
 - `confirm-git-commit.sh` — `PreToolUse` hook gating commit-finalizing git commands (`git commit`, and `--continue` for rebase/cherry-pick/merge/revert/am). Opens the staged changeset in a diff viewer and holds the command behind an approval dialog. Non-matching commands short-circuit before any work is done. Needs a long `timeout` in its settings entry, or the dialog is killed while the diff is still being read.
+- `git-push-allowlist.py` — `PreToolUse` hook letting agents push only a new branch (`git push -u origin <branch>`, branch absent on origin, not protected); blocks every other `git push`. Imports the tokenizer from `gh-allowlist.py`.
 
-The two hooks are symlinked into `~/.claude/hooks/` by `ls-tools --fix`.
+All three hooks are symlinked into `~/.claude/hooks/` by `ls-tools --fix`.
 
 - `fix-settings.sh` — run by `ls-tools --fix` (like `gitconfig/fix-local.sh`); `--check` mode feeds the `claude-settings` row in `ls-tools`. Idempotently merges into `~/.claude/settings.json` the `statusLine` entry, both `PreToolUse` hook registrations (matcher `Bash`; `confirm-git-commit.sh` gets a 1800s timeout — on timeout Claude Code falls back to its normal permission prompt, so this only keeps the dialog alive), and iTerm2's Claude Code integration hook (`~/.config/iterm2/cc-status` on every event iTerm2's wizard registers), plus the `cc-status` symlink into the iTerm2 app bundle. It only adds entries whose command isn't already registered for that event and never touches other keys. `settings.json` itself is deliberately not tracked or symlinked: Claude Code, `/config`, plugin toggles and iTerm2's wizard all write to it.
 
