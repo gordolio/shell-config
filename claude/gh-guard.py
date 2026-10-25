@@ -106,7 +106,7 @@ def tokenize(command):
     # shlex treats newlines as plain whitespace, which would glue the next line's
     # command onto this one; make them separators like `;`. Backticks start a
     # command substitution, so they separate commands too.
-    command = command.replace("\\\n", " ").replace("\n", " ; ").replace("`", " ; ")
+    command = command.replace("\\\n", "").replace("\n", " ; ").replace("`", " ; ")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     return list(lexer)
