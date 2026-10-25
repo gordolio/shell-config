@@ -19,6 +19,7 @@ Machine-local overrides live in ~/.config/claude/gh-guard.json (untracked):
 """
 import json
 import os
+import re
 import shlex
 import sys
 
@@ -66,6 +67,9 @@ VALUE_FLAGS = ("-R", "--repo", "--hostname")
 # shlex's punctuation_chars set; a token made only of these is a shell operator.
 PUNCTUATION = set("();<>|&")
 
+# A `<<DELIM`, `<<-DELIM` or quoted `<<'DELIM'` heredoc operator, not `<<<`.
+HEREDOC = re.compile(r"(?<!<)<<(?!<)-?[ \t]*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
 # Commands that run their arguments as another command.
 WRAPPERS = {"env", "command", "builtin", "exec", "nohup", "time", "sudo", "xargs", "nice"}
 SHELLS = {"sh", "bash", "zsh", "fish", "dash", "ksh"}
@@ -101,12 +105,27 @@ def load_rules():
     return rules
 
 
+def strip_heredocs(command):
+    """Drop heredoc bodies, keeping the `<<DELIM` operator line itself."""
+    lines = command.split("\n")
+    kept = []
+    pending = []  # delimiters whose bodies start on the next line, in order
+    for line in lines:
+        if pending:
+            if line.lstrip("\t") == pending[0]:
+                pending.pop(0)
+            continue
+        kept.append(line)
+        pending.extend(m.group(2) for m in HEREDOC.finditer(line))
+    return "\n".join(kept)
+
+
 def tokenize(command):
     """Split a command line into tokens, honouring quotes and grouping operators."""
     # shlex treats newlines as plain whitespace, which would glue the next line's
     # command onto this one; make them separators like `;`. Backticks start a
     # command substitution, so they separate commands too.
-    command = command.replace("\\\n", "").replace("\n", " ; ").replace("`", " ; ")
+    command = strip_heredocs(command).replace("\\\n", "").replace("\n", " ; ").replace("`", " ; ")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     return list(lexer)
