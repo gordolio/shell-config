@@ -2,7 +2,7 @@
 
 ## Commit Rules
 
-- **Never** add `Co-Authored-By` trailers to git commits.
+- Keep `Co-Authored-By` trailers on agent-assisted commits, in every repo, Trio upstream work included, so the history shows how each commit was made. This used to be the opposite: a global `commit-msg` hook stripped them, which was dropped on 2026-10-25. Don't reintroduce it.
 
 ## Codex CLI
 
