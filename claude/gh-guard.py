@@ -76,6 +76,10 @@ SHELLS = {"sh", "bash", "zsh", "fish", "dash", "ksh"}
 
 # Built-in short names for guarded top-level commands.
 ALIASES = {"ext": "extension", "extensions": "extension"}
+SUBCOMMAND_ALIASES = {("secret", "remove"): "delete", ("variable", "remove"): "delete"}
+
+# Shell keywords that can precede a command, as in `if ...; then gh ...; fi`.
+KEYWORDS = {"if", "then", "else", "elif", "do", "while", "until", "!", "{", "}"}
 
 
 def ask(reason):
@@ -206,6 +210,8 @@ def words(args):
     positional = positionals(args)
     if positional:
         positional[0] = ALIASES.get(positional[0], positional[0])
+    if len(positional) > 1:
+        positional[1] = SUBCOMMAND_ALIASES.get(tuple(positional[:2]), positional[1])
     if positional[:1] == ["api"]:
         write = has_write_method(args) or has_parameter_flag(args)
         return ["api", "write" if write else "read"]
@@ -236,7 +242,9 @@ def strip_prefixes(tokens):
     """Drop VAR=value assignments and wrapper commands (with their flags)."""
     while tokens:
         head = tokens[0]
-        if "=" in head and not head.startswith("-"):
+        if head in KEYWORDS:
+            tokens = tokens[1:]
+        elif "=" in head and not head.startswith("-"):
             tokens = tokens[1:]
         elif os.path.basename(head) in WRAPPERS:
             # Wrapper flags may take values (`sudo -u root`), so jump straight to
