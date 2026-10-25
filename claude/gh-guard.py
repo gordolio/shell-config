@@ -45,6 +45,11 @@ DEFAULT_RULES = [
     "pr merge --admin",
     # Raw API writes can reach any of the above.
     "api write",
+    # Aliases and extensions can wrap any of the above under a new name.
+    "alias set",
+    "alias import",
+    "extension install",
+    "extension exec",
 ]
 
 CONFIG_PATH = os.path.expanduser("~/.config/claude/gh-guard.json")
@@ -60,6 +65,10 @@ VALUE_FLAGS = ("-R", "--repo", "--hostname")
 
 # shlex's punctuation_chars set; a token made only of these is a shell operator.
 PUNCTUATION = set("();<>|&")
+
+# Commands that run their arguments as another command.
+WRAPPERS = {"env", "command", "builtin", "exec", "nohup", "time", "sudo", "xargs", "nice"}
+SHELLS = {"sh", "bash", "zsh", "fish"}
 
 
 def ask(reason):
@@ -91,6 +100,10 @@ def load_rules():
 
 def tokenize(command):
     """Split a command line into tokens, honouring quotes and grouping operators."""
+    # shlex treats newlines as plain whitespace, which would glue the next line's
+    # command onto this one; make them separators like `;`. Backticks start a
+    # command substitution, so they separate commands too.
+    command = command.replace("\n", " ; ").replace("`", " ; ")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     return list(lexer)
@@ -177,10 +190,45 @@ def check_gh_command(tokens, rules):
             ask(f"`{' '.join(tokens)}` matches guarded rule `{rule}`")
 
 
-def strip_env_prefix(tokens):
-    while tokens and not tokens[0].startswith("-") and "=" in tokens[0]:
-        tokens = tokens[1:]
+def strip_prefixes(tokens):
+    """Drop VAR=value assignments and wrapper commands (with their flags)."""
+    while tokens:
+        head = tokens[0]
+        if "=" in head and not head.startswith("-"):
+            tokens = tokens[1:]
+        elif os.path.basename(head) in WRAPPERS:
+            # Wrapper flags may take values (`sudo -u root`), so jump straight to
+            # a gh in the wrapped command when there is one.
+            for index, token in enumerate(tokens[1:], 1):
+                if os.path.basename(token) == "gh":
+                    return tokens[index:]
+            tokens = tokens[1:]
+            while tokens and tokens[0].startswith("-"):
+                tokens = tokens[1:]
+        else:
+            return tokens
     return tokens
+
+
+def check_command(command, rules):
+    try:
+        tokens = tokenize(command)
+    except ValueError:
+        # Unbalanced quotes, so we cannot reason about the command.
+        if "gh" in command.split():
+            ask(f"unparseable command containing `gh`: {command}")
+        return
+    for tokens in map(strip_prefixes, commands(tokens)):
+        if not tokens:
+            continue
+        head = os.path.basename(tokens[0])
+        if head == "gh":
+            check_gh_command([head] + tokens[1:], rules)
+        elif head in SHELLS and "-c" in tokens:
+            # `bash -c "gh ..."`: check the script string as its own command line.
+            index = tokens.index("-c")
+            if index + 1 < len(tokens):
+                check_command(tokens[index + 1], rules)
 
 
 def main():
@@ -193,17 +241,7 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     if "gh" not in command:
         sys.exit(0)
-    rules = load_rules()
-    try:
-        tokens = tokenize(command)
-    except ValueError:
-        # Unbalanced quotes, so we cannot reason about the command.
-        if "gh" in command.split():
-            ask(f"unparseable command containing `gh`: {command}")
-        sys.exit(0)
-    for tokens in map(strip_env_prefix, commands(tokens)):
-        if tokens and os.path.basename(tokens[0]) == "gh":
-            check_gh_command(tokens, rules)
+    check_command(command, load_rules())
     sys.exit(0)
 
 
