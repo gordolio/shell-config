@@ -68,7 +68,10 @@ PUNCTUATION = set("();<>|&")
 
 # Commands that run their arguments as another command.
 WRAPPERS = {"env", "command", "builtin", "exec", "nohup", "time", "sudo", "xargs", "nice"}
-SHELLS = {"sh", "bash", "zsh", "fish"}
+SHELLS = {"sh", "bash", "zsh", "fish", "dash", "ksh"}
+
+# Built-in short names for guarded top-level commands.
+ALIASES = {"ext": "extension", "extensions": "extension"}
 
 
 def ask(reason):
@@ -103,7 +106,7 @@ def tokenize(command):
     # shlex treats newlines as plain whitespace, which would glue the next line's
     # command onto this one; make them separators like `;`. Backticks start a
     # command substitution, so they separate commands too.
-    command = command.replace("\n", " ; ").replace("`", " ; ")
+    command = command.replace("\\\n", " ").replace("\n", " ; ").replace("`", " ; ")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     return list(lexer)
@@ -167,6 +170,8 @@ def positionals(args):
 def words(args):
     """The subcommand words a rule is matched against."""
     positional = positionals(args)
+    if positional:
+        positional[0] = ALIASES.get(positional[0], positional[0])
     if positional[:1] == ["api"]:
         write = has_write_method(args) or has_parameter_flag(args)
         return ["api", "write" if write else "read"]
@@ -182,8 +187,11 @@ def matches(rule, args, command_words):
     return all(any(a == f or a.startswith(f + "=") for a in args) for f in flags)
 
 
-def check_gh_command(tokens, rules):
+def check_gh_command(tokens, rules, via_xargs=False):
     args = tokens[1:]
+    if via_xargs:
+        # xargs appends arguments that are unknown until it runs.
+        ask(f"`{' '.join(tokens)}` run through xargs")
     command_words = words(args)
     for rule in rules:
         if matches(rule, args, command_words):
@@ -201,13 +209,18 @@ def strip_prefixes(tokens):
             # a gh in the wrapped command when there is one.
             for index, token in enumerate(tokens[1:], 1):
                 if os.path.basename(token) == "gh":
-                    return tokens[index:]
+                    return tokens[index:], os.path.basename(head) == "xargs"
             tokens = tokens[1:]
             while tokens and tokens[0].startswith("-"):
                 tokens = tokens[1:]
         else:
-            return tokens
-    return tokens
+            return tokens, False
+    return tokens, False
+
+
+def script_flag(token):
+    """True for -c and short-option groups containing it, like -lc or -ec."""
+    return len(token) > 1 and token[0] == "-" and token[1] != "-" and "c" in token[1:]
 
 
 def check_command(command, rules):
@@ -218,17 +231,20 @@ def check_command(command, rules):
         if "gh" in command.split():
             ask(f"unparseable command containing `gh`: {command}")
         return
-    for tokens in map(strip_prefixes, commands(tokens)):
+    for tokens, via_xargs in map(strip_prefixes, commands(tokens)):
         if not tokens:
             continue
         head = os.path.basename(tokens[0])
         if head == "gh":
-            check_gh_command([head] + tokens[1:], rules)
-        elif head in SHELLS and "-c" in tokens:
+            check_gh_command([head] + tokens[1:], rules, via_xargs)
+        elif head == "eval":
+            check_command(" ".join(tokens[1:]), rules)
+        elif head in SHELLS:
             # `bash -c "gh ..."`: check the script string as its own command line.
-            index = tokens.index("-c")
-            if index + 1 < len(tokens):
-                check_command(tokens[index + 1], rules)
+            for index, token in enumerate(tokens[1:-1], 1):
+                if script_flag(token):
+                    check_command(tokens[index + 1], rules)
+                    break
 
 
 def main():
