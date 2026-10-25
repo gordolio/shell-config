@@ -106,18 +106,33 @@ def load_rules():
 
 
 def strip_heredocs(command):
-    """Drop heredoc bodies, keeping the `<<DELIM` operator line itself."""
-    lines = command.split("\n")
+    """Split heredoc bodies out of the command line.
+
+    Returns the command with bodies removed, plus the bodies that still run as
+    commands: those fed to a shell, and unquoted ones with a command
+    substitution. Plain text bodies (commit messages, file contents) are dropped.
+    """
     kept = []
-    pending = []  # delimiters whose bodies start on the next line, in order
-    for line in lines:
+    executed = []
+    pending = []  # (delimiter, fed to a shell, delimiter quoted), in order
+    body = []
+    for line in command.split("\n"):
         if pending:
-            if line.lstrip("\t") == pending[0]:
-                pending.pop(0)
+            if line.lstrip("\t") != pending[0][0]:
+                body.append(line)
+                continue
+            _, to_shell, quoted = pending.pop(0)
+            text = "\n".join(body)
+            body = []
+            if to_shell or (not quoted and ("$(" in text or "`" in text)):
+                executed.append(text)
             continue
         kept.append(line)
-        pending.extend(m.group(2) for m in HEREDOC.finditer(line))
-    return "\n".join(kept)
+        words = line.split()
+        to_shell = bool(words) and os.path.basename(words[0]) in SHELLS
+        for m in HEREDOC.finditer(line):
+            pending.append((m.group(2), to_shell, bool(m.group(1))))
+    return "\n".join(kept), executed
 
 
 def tokenize(command):
@@ -125,7 +140,7 @@ def tokenize(command):
     # shlex treats newlines as plain whitespace, which would glue the next line's
     # command onto this one; make them separators like `;`. Backticks start a
     # command substitution, so they separate commands too.
-    command = strip_heredocs(command).replace("\\\n", "").replace("\n", " ; ").replace("`", " ; ")
+    command = command.replace("\\\n", "").replace("\n", " ; ").replace("`", " ; ")
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
     return list(lexer)
@@ -243,6 +258,9 @@ def script_flag(token):
 
 
 def check_command(command, rules):
+    command, bodies = strip_heredocs(command)
+    for body in bodies:
+        check_command(body, rules)
     try:
         tokens = tokenize(command)
     except ValueError:
