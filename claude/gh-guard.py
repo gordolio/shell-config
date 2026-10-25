@@ -132,10 +132,13 @@ def strip_heredocs(command):
                 executed.append(text)
             continue
         kept.append(line)
-        words = line.split()
-        to_shell = bool(words) and os.path.basename(words[0]) in SHELLS
+        # Any shell or eval on the line, so `cat <<EOF | bash` counts too.
+        to_shell = any(os.path.basename(w) in SHELLS | {"eval"} for w in line.split())
         for m in HEREDOC.finditer(line):
             pending.append((m.group(2), to_shell, bool(m.group(1))))
+    if pending:
+        # Unterminated heredoc: check what would have been its body.
+        executed.append("\n".join(body))
     return "\n".join(kept), executed
 
 
