@@ -9,6 +9,11 @@
 # already has a hook with the same command, whatever its matcher/timeout, so
 # hand-tuned entries are never rewritten. Safe to re-run.
 #
+# Retired hooks (retired_hooks below) are the one exception: their settings
+# entries are removed and their dangling ~/.claude/hooks symlinks deleted, so
+# a hook dropped from this repo does not keep firing, and failing, on every
+# machine that registered it.
+#
 # iTerm2 entries: Settings > General > AI > Claude Code integration installs
 # the cc-status hook on the events below and symlinks ~/.config/iterm2/cc-status
 # into the app bundle. The rest of that integration (Python API, Session Status
@@ -33,16 +38,15 @@ iterm_events=(Notification PermissionRequest PostToolUse PreToolUse SessionEnd
               SessionStart Stop StopFailure SubagentStop UserPromptSubmit)
 
 # One entry per line: event<TAB>matcher<TAB>timeout<TAB>command (empty = unset).
-# confirm-git-commit.sh holds the command behind an approval dialog; on timeout
-# Claude Code falls back to its normal permission prompt, so the long timeout is
-# only about not killing the dialog mid-review.
 wanted=$(
-  printf 'PreToolUse\tBash\t\t%s\n' "$HOME/.claude/hooks/gh-allowlist.py"
-  printf 'PreToolUse\tBash\t1800\t%s\n' "$HOME/.claude/hooks/confirm-git-commit.sh"
+  printf 'PreToolUse\tBash\t\t%s\n' "$HOME/.claude/hooks/gh-guard.py"
   for event in "${iterm_events[@]}"; do
     printf '%s\t\t\t%s\n' "$event" "$cc_status_link"
   done
 )
+retired_hooks=("$HOME/.claude/hooks/gh-allowlist.py"
+               "$HOME/.claude/hooks/confirm-git-commit.sh"
+               "$HOME/.claude/hooks/git-push-allowlist.py")
 statusline_cmd="$shell_config/claude/statusline-command.sh"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -59,8 +63,10 @@ if [[ -f "$settings" ]]; then
 fi
 
 # Emits {settings, added: [labels]}.
-result=$(jq --arg wanted "$wanted" --arg statusline "$statusline_cmd" '
-  ($wanted | split("\n") | map(select(length > 0) | split("\t")
+result=$(jq --arg wanted "$wanted" --arg statusline "$statusline_cmd" \
+  --args '
+  $ARGS.positional as $retired
+  | ($wanted | split("\n") | map(select(length > 0) | split("\t")
     | {event: .[0], matcher: .[1], timeout: .[2], command: .[3]})) as $entries
   | reduce $entries[] as $e ({settings: ., added: []};
       if any(.settings.hooks[$e.event][]?.hooks[]?; .command == $e.command) then .
@@ -69,13 +75,25 @@ result=$(jq --arg wanted "$wanted" --arg statusline "$statusline_cmd" '
           (if $e.matcher != "" then {matcher: $e.matcher} else {} end)
           + {hooks: [{type: "command", command: $e.command}
                      + (if $e.timeout != "" then {timeout: ($e.timeout | tonumber)} else {} end)]}]
-        | .added += ["\($e.event): \($e.command | split("/") | last)"]
+        | .added += ["added \($e.event): \($e.command | split("/") | last)"]
       end)
   | if .settings.statusLine == null then
       .settings.statusLine = {type: "command", command: $statusline}
-      | .added += ["statusLine: \($statusline | split("/") | last)"]
+      | .added += ["added statusLine: \($statusline | split("/") | last)"]
     else . end
-' <<<"$current") || { echo "❌ fix-settings: jq merge failed" >&2; exit 1; }
+  | reduce $retired[] as $r (.;
+      if any(.settings.hooks[]?[]?.hooks[]?; .command == $r) then
+        .settings.hooks |= (map_values(
+            map(.hooks |= map(select(.command != $r))) | map(select(.hooks | length > 0)))
+          | with_entries(select(.value | length > 0)))
+        | .added += ["removed retired hook: \($r | split("/") | last)"]
+      else . end)
+' "${retired_hooks[@]}" <<<"$current") || { echo "❌ fix-settings: jq merge failed" >&2; exit 1; }
+
+stale_links=()
+for hook in "${retired_hooks[@]}"; do
+  [[ -L "$hook" ]] && stale_links+=("$hook")
+done
 
 link_ok=0
 [[ -L "$cc_status_link" && "$(readlink "$cc_status_link")" == "$cc_status_target" ]] && link_ok=1
@@ -83,6 +101,9 @@ link_ok=0
 if (( check_only )); then
   missing=$(jq -r '.added[]' <<<"$result")
   (( link_ok )) || missing+=$'\n'"symlink: $cc_status_link"
+  for hook in ${stale_links[@]+"${stale_links[@]}"}; do
+    missing+=$'\n'"stale symlink: ${hook/#$HOME/~}"
+  done
   [[ -z "${missing//$'\n'/}" ]] && exit 0
   printf '%s\n' "$missing" | sed '/^$/d'
   exit 1
@@ -99,6 +120,11 @@ else
   ln -sfn "$cc_status_target" "$cc_status_link"
   echo "🔧 ${cc_status_link/#$HOME/~} -> iTerm2 cc-status (created)"
 fi
+
+for hook in ${stale_links[@]+"${stale_links[@]}"}; do
+  rm -f "$hook"
+  echo "🔧 ${hook/#$HOME/~}: removed retired hook symlink"
+done
 
 if [[ $(jq '.added | length' <<<"$result") -eq 0 ]]; then
   echo "✅ $display_settings has all Claude Code hooks and statusline (ok)"
@@ -118,5 +144,5 @@ else
 fi
 
 jq -r '.added[]' <<<"$result" | while IFS= read -r label; do
-  echo "🔧 $display_settings: added $label"
+  echo "🔧 $display_settings: $label"
 done
