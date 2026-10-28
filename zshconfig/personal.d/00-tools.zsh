@@ -57,6 +57,12 @@ function __check_setup_symlinks {
   __tool_check_symlink ".claude/hooks/git-push-allowlist.py" "$HOME/.claude/hooks/git-push-allowlist.py" "$shell_config/claude/git-push-allowlist.py" "$category"
   __tool_check_symlink ".gnupg/pinentry-ide.sh" "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" "$category"
   __tool_check_symlink "shai-hulud-check" "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "$category"
+  __tool_check_symlink "opencode" "$HOME/bin/opencode" "$shell_config/bin/opencode" "$category"
+  __tool_check_symlink "codex" "$HOME/bin/codex" "$shell_config/bin/codex" "$category"
+  __tool_check_symlink "omo4" "$HOME/bin/omo4" "$shell_config/bin/omo4" "$category"
+  __tool_check_symlink "update-oc-models" "$HOME/bin/update-oc-models" "$shell_config/bin/update-oc-models.ts" "$category"
+  __tool_check_path ".config/op/opencode.env" "$HOME/.config/op/opencode.env" secrets file
+  __tool_check_path ".config/op/codex.env" "$HOME/.config/op/codex.env" secrets file
   __tool_check_symlink ".config/opencode/tui.json" "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" "$category"
   if [[ -e "$shell_config/op/npm.env" ]]; then
     __tool_check_symlink ".config/op/npm.env" "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" "$category"
@@ -143,6 +149,10 @@ function __fix_setup_symlinks {
   __fix_symlink "$HOME/.claude/hooks/git-push-allowlist.py" "$shell_config/claude/git-push-allowlist.py" ".claude/hooks/git-push-allowlist.py"
   __fix_symlink "$HOME/.gnupg/pinentry-ide.sh" "$shell_config/gnupgconfig/pinentry-ide.sh" ".gnupg/pinentry-ide.sh"
   __fix_symlink "$HOME/bin/shai-hulud-check" "$shell_config/bin/shai-hulud-check.sh" "shai-hulud-check"
+  __fix_symlink "$HOME/bin/opencode" "$shell_config/bin/opencode" "opencode"
+  __fix_symlink "$HOME/bin/codex" "$shell_config/bin/codex" "codex"
+  __fix_symlink "$HOME/bin/omo4" "$shell_config/bin/omo4" "omo4"
+  __fix_symlink "$HOME/bin/update-oc-models" "$shell_config/bin/update-oc-models.ts" "update-oc-models"
   __fix_symlink "$HOME/.config/opencode/tui.json" "$shell_config/opencode/tui.json" ".config/opencode/tui.json"
   if [[ -e "$shell_config/op/npm.env" ]]; then
     __fix_symlink "$HOME/.config/op/npm.env" "$shell_config/op/npm.env" ".config/op/npm.env"
@@ -169,11 +179,12 @@ function __fix_setup_symlinks {
   echo ""
   echo "Done. Refreshing symlink status..."
 
-  # Clear existing symlink records and re-check
+  # Clear existing records from __check_setup_symlinks and re-check. Besides
+  # symlinks, it records the .config/op/*.env files under "secrets".
   local -a new_names new_categories new_statuses new_details new_paths
   local i
   for (( i=1; i<=${#__tool_names[@]}; i++ )); do
-    if [[ "${__tool_categories[$i]}" != "symlinks" ]]; then
+    if [[ "${__tool_categories[$i]}" != "symlinks" && "${__tool_names[$i]}" != .config/op/* ]]; then
       new_names+=("${__tool_names[$i]}")
       new_categories+=("${__tool_categories[$i]}")
       new_statuses+=("${__tool_statuses[$i]}")
