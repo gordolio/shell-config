@@ -64,7 +64,7 @@ fix_symlink "$HOME/.config/atuin/config.toml"   "$SHELL_CONFIG/atuinconfig/confi
 fix_symlink "$HOME/.config/oh-my-posh"          "$SHELL_CONFIG/oh-my-poshconfig"       ".config/oh-my-posh"
 fix_symlink "$HOME/.config/nvim"                "$SHELL_CONFIG/nvimconfig"             ".config/nvim"
 fix_symlink "$HOME/.hammerspoon/init.lua"       "$SHELL_CONFIG/hammerspoonconfig/init.lua" ".hammerspoon/init.lua"
-fix_symlink "$HOME/.claude/hooks/gh-allowlist.py" "$SHELL_CONFIG/claude/gh-allowlist.py"   ".claude/hooks/gh-allowlist.py"
+fix_symlink "$HOME/.claude/hooks/gh-guard.py" "$SHELL_CONFIG/claude/gh-guard.py"       ".claude/hooks/gh-guard.py"
 fix_symlink "$HOME/bin/shai-hulud-check"          "$SHELL_CONFIG/bin/shai-hulud-check.sh"  "bin/shai-hulud-check"
 fix_symlink "$HOME/.codex/statusline.config.toml" "$SHELL_CONFIG/codex/statusline.config.toml" ".codex/statusline.config.toml"
 
